@@ -16,6 +16,9 @@ import Connections from "@/pages/connections";
 import Marketplace from "@/pages/marketplace";
 import Messages from "@/pages/messages";
 import SettingsPage from "@/pages/settings";
+import SearchPage from "@/pages/search";
+import Terms from "@/pages/terms";
+import Privacy from "@/pages/privacy";
 import NotFound from "@/pages/not-found";
 import { useState } from "react";
 import { isLoggedIn } from "@/lib/userStore";
@@ -47,6 +50,9 @@ function AppLayout() {
               <Route path="/marketplace" component={Marketplace} />
               <Route path="/messages"    component={Messages} />
               <Route path="/settings"    component={SettingsPage} />
+              <Route path="/search"      component={SearchPage} />
+              <Route path="/terms"       component={Terms} />
+              <Route path="/privacy"     component={Privacy} />
               <Route component={NotFound} />
             </Switch>
           </main>

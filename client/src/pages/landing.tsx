@@ -28,6 +28,7 @@ export default function Landing({ onLogin }: { onLogin?: () => void }) {
   const [signupCompany, setSignupCompany] = useState("");
   const [signupLocation, setSignupLocation] = useState("");
   const [signupError, setSignupError] = useState("");
+  const [showGooglePrompt, setShowGooglePrompt] = useState(false);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,7 +64,27 @@ export default function Landing({ onLogin }: { onLogin?: () => void }) {
     setLocation("/home");
   };
 
-  const handleSocialLogin = () => {
+  // Simulate Google OAuth prefill — in production this comes from Supabase session
+  const handleGoogleLogin = () => {
+    // In production, Supabase returns the Google user's name + email automatically.
+    // For now we pre-fill the signup form with a prompt to complete their profile.
+    setSignupName(""); // will be filled by Google in production
+    setSignupEmail(""); // will be filled by Google in production
+    // Switch to signup tab so they can complete remaining fields
+    setShowGooglePrompt(true);
+  };
+
+  const handleGoogleComplete = () => {
+    if (!signupName.trim()) { setSignupError("Please enter your name."); return; }
+    saveProfile({
+      name: signupName.trim(),
+      email: signupEmail.trim(),
+      phone: signupPhone.trim(),
+      headline: signupHeadline.trim(),
+      company: signupCompany.trim(),
+      location: signupLocation.trim(),
+      points: 500,
+    });
     setLoggedIn(true);
     onLogin?.();
     setLocation("/home");
@@ -123,6 +144,39 @@ export default function Landing({ onLogin }: { onLogin?: () => void }) {
                   <CardDescription>Sign in or create an account to get started</CardDescription>
                 </CardHeader>
                 <CardContent>
+                  {showGooglePrompt ? (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg mb-2">
+                        <SiGoogle className="h-5 w-5 text-blue-500 shrink-0" />
+                        <p className="text-sm text-blue-700 dark:text-blue-300">Complete your Chakri profile to continue</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Full Name *</Label>
+                        <Input placeholder="Priya Sharma" value={signupName} onChange={e => setSignupName(e.target.value)} required />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Email *</Label>
+                        <Input type="email" placeholder="you@gmail.com" value={signupEmail} onChange={e => setSignupEmail(e.target.value)} required />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Current Role / Headline</Label>
+                        <Input placeholder="Software Engineer at Infosys" value={signupHeadline} onChange={e => setSignupHeadline(e.target.value)} />
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-2">
+                          <Label>Company</Label>
+                          <Input placeholder="Infosys" value={signupCompany} onChange={e => setSignupCompany(e.target.value)} />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Location</Label>
+                          <Input placeholder="Bengaluru" value={signupLocation} onChange={e => setSignupLocation(e.target.value)} />
+                        </div>
+                      </div>
+                      {signupError && <p className="text-sm text-destructive">{signupError}</p>}
+                      <Button className="w-full" onClick={handleGoogleComplete}>Complete Sign Up 🎉</Button>
+                      <p className="text-xs text-center text-muted-foreground">🎁 Get 500 Chakri Coins as a welcome bonus!</p>
+                    </div>
+                  ) : (
                   <Tabs defaultValue="login" className="w-full">
                     <TabsList className="grid w-full grid-cols-2">
                       <TabsTrigger value="login" data-testid="tab-login">Sign In</TabsTrigger>
@@ -154,9 +208,9 @@ export default function Landing({ onLogin }: { onLogin?: () => void }) {
                         </div>
                       </div>
                       <div className="grid grid-cols-3 gap-2">
-                        <Button variant="outline" onClick={handleSocialLogin} data-testid="button-google-login"><SiGoogle className="h-4 w-4" /></Button>
-                        <Button variant="outline" onClick={handleSocialLogin} data-testid="button-github-login"><SiGithub className="h-4 w-4" /></Button>
-                        <Button variant="outline" onClick={handleSocialLogin} data-testid="button-apple-login"><SiApple className="h-4 w-4" /></Button>
+                        <Button variant="outline" onClick={handleGoogleLogin} data-testid="button-google-login"><SiGoogle className="h-4 w-4" /></Button>
+                        <Button variant="outline" onClick={() => alert("GitHub sign-in coming soon!")} data-testid="button-github-login"><SiGithub className="h-4 w-4" /></Button>
+                        <Button variant="outline" onClick={() => alert("Apple sign-in coming soon!")} data-testid="button-apple-login"><SiApple className="h-4 w-4" /></Button>
                       </div>
                     </TabsContent>
 
@@ -217,12 +271,13 @@ export default function Landing({ onLogin }: { onLogin?: () => void }) {
                         </div>
                       </div>
                       <div className="grid grid-cols-3 gap-2">
-                        <Button variant="outline" onClick={handleSocialLogin} data-testid="button-google-signup"><SiGoogle className="h-4 w-4" /></Button>
-                        <Button variant="outline" onClick={handleSocialLogin} data-testid="button-github-signup"><SiGithub className="h-4 w-4" /></Button>
-                        <Button variant="outline" onClick={handleSocialLogin} data-testid="button-apple-signup"><SiApple className="h-4 w-4" /></Button>
+                        <Button variant="outline" onClick={handleGoogleLogin} data-testid="button-google-signup"><SiGoogle className="h-4 w-4" /></Button>
+                        <Button variant="outline" onClick={() => alert("GitHub sign-in coming soon!")} data-testid="button-github-signup"><SiGithub className="h-4 w-4" /></Button>
+                        <Button variant="outline" onClick={() => alert("Apple sign-in coming soon!")} data-testid="button-apple-signup"><SiApple className="h-4 w-4" /></Button>
                       </div>
                     </TabsContent>
                   </Tabs>
+                  )}
                 </CardContent>
               </Card>
             </div>

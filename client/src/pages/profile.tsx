@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -70,9 +70,26 @@ export default function Profile() {
         <div className="h-32 bg-gradient-to-r from-primary/20 via-primary/10 to-primary/5 rounded-t-lg" />
         <CardContent className="pt-0">
           <div className="flex flex-col md:flex-row gap-6 items-start -mt-16 md:-mt-12">
-            <Avatar className="h-32 w-32 border-4 border-background text-3xl font-bold">
-              <AvatarFallback className="bg-primary text-primary-foreground text-3xl font-bold">{initials}</AvatarFallback>
-            </Avatar>
+            <div className="relative group">
+              <Avatar className="h-32 w-32 border-4 border-background text-3xl font-bold">
+                {profile.avatarUrl && <AvatarImage src={profile.avatarUrl} alt={profile.name} className="object-cover" />}
+                <AvatarFallback className="bg-primary text-primary-foreground text-3xl font-bold">{initials}</AvatarFallback>
+              </Avatar>
+              <label className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
+                <span className="text-white text-xs font-medium text-center leading-tight">Upload<br/>Photo</span>
+                <input type="file" accept="image/*" className="hidden" onChange={e => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  const reader = new FileReader();
+                  reader.onload = ev => {
+                    const url = ev.target?.result as string;
+                    saveProfile({ avatarUrl: url });
+                    setProfile(p => ({ ...p, avatarUrl: url }));
+                  };
+                  reader.readAsDataURL(file);
+                }} />
+              </label>
+            </div>
             <div className="flex-1 pt-16 md:pt-4 w-full">
               <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                 <div className="flex-1">

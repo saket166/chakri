@@ -1,13 +1,12 @@
 import { useEffect, useState } from "react";
-import { Home, Users, Briefcase, User, Award, ShoppingBag, LogOut, MessageCircle, Settings, HelpCircle, FileText, Shield, ChevronUp } from "lucide-react";
+import { Home, Users, Briefcase, User, Award, ShoppingBag, LogOut, MessageCircle, Settings, HelpCircle, FileText, Shield, ChevronUp, Search } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
   SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem,
   SidebarHeader, SidebarFooter,
 } from "@/components/ui/sidebar";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
@@ -16,12 +15,13 @@ import {
 import { getProfile, logout, getUnreadDMCount } from "@/lib/userStore";
 
 const menuItems = [
-  { title: "Home",           url: "/home",        icon: Home },
-  { title: "Referral Center",url: "/referrals",   icon: Briefcase },
-  { title: "Connections",    url: "/connections",  icon: Users },
-  { title: "Messages",       url: "/messages",     icon: MessageCircle },
-  { title: "Marketplace",    url: "/marketplace",  icon: ShoppingBag },
-  { title: "Profile",        url: "/profile",      icon: User },
+  { title: "Home",            url: "/home",        icon: Home },
+  { title: "Search People",   url: "/search",      icon: Search },
+  { title: "Referral Center", url: "/referrals",   icon: Briefcase },
+  { title: "Connections",     url: "/connections",  icon: Users },
+  { title: "Messages",        url: "/messages",     icon: MessageCircle },
+  { title: "Marketplace",     url: "/marketplace",  icon: ShoppingBag },
+  { title: "Profile",         url: "/profile",      icon: User },
 ];
 
 export function AppSidebar({ onLogout }: { onLogout?: () => void }) {
@@ -85,6 +85,9 @@ export function AppSidebar({ onLogout }: { onLogout?: () => void }) {
           <DropdownMenuTrigger asChild>
             <button className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-muted/60 transition-colors text-left">
               <Avatar className="h-9 w-9 shrink-0">
+                {profile.avatarUrl
+                  ? <AvatarImage src={profile.avatarUrl} alt={profile.name} />
+                  : null}
                 <AvatarFallback className="bg-primary text-primary-foreground font-semibold text-sm">{initials}</AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">

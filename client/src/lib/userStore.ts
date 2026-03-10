@@ -59,6 +59,7 @@ export interface UserProfile {
   skills: string[]; workHistory: WorkItem[]; education: EduItem[];
   certifications: CertItem[]; redemptions: Redemption[];
   permanentConnections: string[];
+  avatarUrl?: string;
 }
 
 export interface FeedItem {

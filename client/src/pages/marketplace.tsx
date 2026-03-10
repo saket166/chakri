@@ -11,8 +11,8 @@ interface Item {
 }
 
 const items: Item[] = [
-  { id:"1",  name:"Amazon Gift Card ₹500",    description:"Shop anything on Amazon India",       pointsCost:5000,  category:"gift-card",    brand:"Amazon",    emoji:"🛒",  comingSoon:false },
-  { id:"2",  name:"Amazon Gift Card ₹1000",   description:"Shop anything on Amazon India",       pointsCost:10000, category:"gift-card",    brand:"Amazon",    emoji:"🛒",  comingSoon:false },
+  { id:"1",  name:"Amazon Gift Card ₹500",    description:"Shop anything on Amazon India",       pointsCost:5000,  category:"gift-card",    brand:"Amazon",    emoji:"🛒",  comingSoon:true },
+  { id:"2",  name:"Amazon Gift Card ₹1000",   description:"Shop anything on Amazon India",       pointsCost:10000, category:"gift-card",    brand:"Amazon",    emoji:"🛒",  comingSoon:true },
   { id:"3",  name:"Flipkart Gift Card ₹500",  description:"Shop on Flipkart",                    pointsCost:5000,  category:"gift-card",    brand:"Flipkart",  emoji:"🛍️", comingSoon:true  },
   { id:"4",  name:"Swiggy Credits ₹300",      description:"Order your favourite food",           pointsCost:3000,  category:"food",         brand:"Swiggy",    emoji:"🍔",  comingSoon:true  },
   { id:"5",  name:"Zomato Credits ₹300",      description:"Order your favourite food",           pointsCost:3000,  category:"food",         brand:"Zomato",    emoji:"🍕",  comingSoon:true  },
