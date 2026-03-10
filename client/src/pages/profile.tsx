@@ -155,7 +155,7 @@ export default function Profile() {
                 </div>
                 <div className="h-12 w-px bg-border" />
                 <div>
-                  <p className="text-2xl font-bold">142</p>
+                  <p className="text-2xl font-bold">{(profile.permanentConnections || []).length}</p>
                   <p className="text-xs text-muted-foreground">Connections</p>
                 </div>
               </div>

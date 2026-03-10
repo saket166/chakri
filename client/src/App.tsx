@@ -19,6 +19,7 @@ import SettingsPage from "@/pages/settings";
 import SearchPage from "@/pages/search";
 import Terms from "@/pages/terms";
 import Privacy from "@/pages/privacy";
+import Contact from "@/pages/contact";
 import NotFound from "@/pages/not-found";
 import { useState } from "react";
 import { isLoggedIn } from "@/lib/userStore";
@@ -53,6 +54,7 @@ function AppLayout() {
               <Route path="/search"      component={SearchPage} />
               <Route path="/terms"       component={Terms} />
               <Route path="/privacy"     component={Privacy} />
+              <Route path="/contact"     component={Contact} />
               <Route component={NotFound} />
             </Switch>
           </main>

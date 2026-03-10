@@ -113,9 +113,9 @@ export function AppSidebar({ onLogout }: { onLogout?: () => void }) {
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <a href="mailto:support@chakri.app" className="flex items-center gap-2 cursor-pointer">
+              <Link href="/contact" className="flex items-center gap-2 cursor-pointer">
                 <HelpCircle className="h-4 w-4" />Contact Us
-              </a>
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link href="/terms" className="flex items-center gap-2 cursor-pointer">
