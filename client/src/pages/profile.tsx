@@ -7,69 +7,43 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { SkillBadge } from "@/components/skill-badge";
-import {
-  Edit, MapPin, Building2, Award, GraduationCap, FileText, Briefcase,
-  Save, X, Plus, Trash2,
-} from "lucide-react";
-import { getProfile, saveProfile, getUserRatings, type UserProfile } from "@/lib/userStore";
-import { Star } from "lucide-react";
+import { Edit, MapPin, Building2, Award, Save, X, Star, ThumbsUp } from "lucide-react";
+import { api, getCachedUser } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import { formatDistanceToNow } from "date-fns";
 
 export default function Profile() {
   const { toast } = useToast();
+  const [profile, setProfile] = useState<any>(getCachedUser() || {});
+  const [recs, setRecs] = useState<any[]>([]);
   const [isEditing, setIsEditing] = useState(false);
-  const [profile, setProfile] = useState<UserProfile>(getProfile());
-  const [draft, setDraft] = useState<UserProfile>(getProfile());
-  const [newSkill, setNewSkill] = useState("");
+  const [draft, setDraft] = useState<any>({});
 
-  // Reload if updated elsewhere (e.g. sidebar)
   useEffect(() => {
-    const handler = () => { const p = getProfile(); setProfile(p); };
-    window.addEventListener("chakri_profile_updated", handler);
-    return () => window.removeEventListener("chakri_profile_updated", handler);
+    api.auth.me().then(u => { setProfile(u); setDraft(u); });
+    if (getCachedUser()?.id) {
+      api.users.recommendations(getCachedUser().id).then(setRecs);
+    }
   }, []);
 
-  const startEdit = () => {
-    setDraft(JSON.parse(JSON.stringify(profile)));
-    setIsEditing(true);
-  };
-
-  const cancelEdit = () => {
-    setIsEditing(false);
-    setNewSkill("");
-  };
-
-  const saveEdit = () => {
-    const updated = saveProfile(draft);
-    setProfile(updated);
-    setIsEditing(false);
-    setNewSkill("");
-    toast({ title: "Profile saved!", description: "Your changes have been saved." });
+  const save = async () => {
+    const updated = await api.auth.update(draft);
+    setProfile(updated); setIsEditing(false);
+    toast({ title: "Profile saved!" });
   };
 
   const d = isEditing ? draft : profile;
-
-  const setField = (field: keyof UserProfile, value: any) =>
-    setDraft((prev) => ({ ...prev, [field]: value }));
-
-  const addSkill = () => {
-    const s = newSkill.trim();
-    if (s && !draft.skills.includes(s)) {
-      setDraft((p) => ({ ...p, skills: [...p.skills, s] }));
-      setNewSkill("");
-    }
-  };
-
-  const initials = (d.name || "?").split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
+  const initials = (d?.name || "?").split(" ").map((n: string) => n[0]).join("").slice(0,2).toUpperCase();
+  const avgSpeed = recs.length ? (recs.reduce((a: number, r: any) => a + r.speed, 0) / recs.length).toFixed(1) : null;
+  const avgExp = recs.length ? (recs.reduce((a: number, r: any) => a + r.experience, 0) / recs.length).toFixed(1) : null;
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-5xl">
-      {/* Header Card */}
       <Card className="mb-6">
         <div className="h-32 bg-gradient-to-r from-primary/20 via-primary/10 to-primary/5 rounded-t-lg" />
         <CardContent className="pt-0">
           <div className="flex flex-col md:flex-row gap-6 items-start -mt-16 md:-mt-12">
+            {/* Avatar with upload */}
             <div className="relative group">
               <Avatar className="h-32 w-32 border-4 border-background text-3xl font-bold">
                 {profile.avatarUrl && <AvatarImage src={profile.avatarUrl} alt={profile.name} className="object-cover" />}
@@ -78,305 +52,119 @@ export default function Profile() {
               <label className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
                 <span className="text-white text-xs font-medium text-center leading-tight">Upload<br/>Photo</span>
                 <input type="file" accept="image/*" className="hidden" onChange={e => {
-                  const file = e.target.files?.[0];
-                  if (!file) return;
+                  const file = e.target.files?.[0]; if (!file) return;
                   const reader = new FileReader();
-                  reader.onload = ev => {
+                  reader.onload = async ev => {
                     const url = ev.target?.result as string;
-                    saveProfile({ avatarUrl: url });
-                    setProfile(p => ({ ...p, avatarUrl: url }));
+                    await api.auth.update({ avatarUrl: url });
+                    setProfile((p: any) => ({ ...p, avatarUrl: url }));
                   };
                   reader.readAsDataURL(file);
                 }} />
               </label>
             </div>
+
             <div className="flex-1 pt-16 md:pt-4 w-full">
               <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                 <div className="flex-1">
                   {isEditing ? (
                     <div className="space-y-3">
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <Label>Full Name</Label>
-                          <Input value={draft.name} onChange={(e) => setField("name", e.target.value)} placeholder="Your Name" />
-                        </div>
-                        <div>
-                          <Label>Headline</Label>
-                          <Input value={draft.headline} onChange={(e) => setField("headline", e.target.value)} placeholder="Software Engineer at Infosys" />
-                        </div>
+                      <Input placeholder="Full Name" value={draft.name || ""} onChange={e => setDraft((p: any) => ({ ...p, name: e.target.value }))} />
+                      <Input placeholder="Headline (e.g. SDE-2 at Google)" value={draft.headline || ""} onChange={e => setDraft((p: any) => ({ ...p, headline: e.target.value }))} />
+                      <div className="grid grid-cols-2 gap-2">
+                        <Input placeholder="Company" value={draft.company || ""} onChange={e => setDraft((p: any) => ({ ...p, company: e.target.value }))} />
+                        <Input placeholder="Location" value={draft.location || ""} onChange={e => setDraft((p: any) => ({ ...p, location: e.target.value }))} />
                       </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <Label>Company</Label>
-                          <Input value={draft.company} onChange={(e) => setField("company", e.target.value)} placeholder="Company Name" />
-                        </div>
-                        <div>
-                          <Label>Location</Label>
-                          <Input value={draft.location} onChange={(e) => setField("location", e.target.value)} placeholder="City, State" />
-                        </div>
-                      </div>
-                      <div>
-                        <Label>Bio</Label>
-                        <Textarea value={draft.bio} onChange={(e) => setField("bio", e.target.value)} placeholder="Tell people about yourself..." rows={2} />
-                      </div>
+                      <Textarea placeholder="Bio" value={draft.bio || ""} onChange={e => setDraft((p: any) => ({ ...p, bio: e.target.value }))} rows={3} />
                     </div>
                   ) : (
                     <>
-                      <h1 className="text-3xl font-bold">{d.name || "Your Name"}</h1>
-                      {d.headline && <p className="text-lg text-muted-foreground mt-1">{d.headline}</p>}
-                      <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground flex-wrap">
-                        {d.location && <span className="flex items-center gap-1"><MapPin className="h-4 w-4" />{d.location}</span>}
-                        {d.company && <span className="flex items-center gap-1"><Building2 className="h-4 w-4" />{d.company}</span>}
+                      <h1 className="text-2xl font-bold">{d?.name || "Your Name"}</h1>
+                      <p className="text-muted-foreground mt-1">{d?.headline || "Add your headline"}</p>
+                      <div className="flex flex-wrap gap-3 mt-2 text-sm text-muted-foreground">
+                        {d?.company && <span className="flex items-center gap-1"><Building2 className="h-3.5 w-3.5" />{d.company}</span>}
+                        {d?.location && <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{d.location}</span>}
                       </div>
-                      {d.bio && <p className="mt-2 text-sm text-muted-foreground">{d.bio}</p>}
+                      {d?.bio && <p className="text-sm mt-3">{d.bio}</p>}
                     </>
                   )}
                 </div>
-                <div className="flex gap-2 shrink-0">
+                <div className="flex gap-2">
                   {isEditing ? (
                     <>
-                      <Button variant="outline" size="sm" onClick={cancelEdit}><X className="h-4 w-4 mr-1" />Cancel</Button>
-                      <Button size="sm" onClick={saveEdit}><Save className="h-4 w-4 mr-1" />Save</Button>
+                      <Button size="sm" onClick={save}><Save className="h-3.5 w-3.5 mr-1" />Save</Button>
+                      <Button size="sm" variant="outline" onClick={() => setIsEditing(false)}><X className="h-3.5 w-3.5" /></Button>
                     </>
                   ) : (
-                    <Button variant="outline" onClick={startEdit} data-testid="button-edit-profile">
-                      <Edit className="h-4 w-4 mr-2" />Edit Profile
+                    <Button size="sm" variant="outline" onClick={() => { setDraft(profile); setIsEditing(true); }}>
+                      <Edit className="h-3.5 w-3.5 mr-1" />Edit
                     </Button>
                   )}
                 </div>
               </div>
-              <div className="flex items-center gap-4 mt-4">
-                <div className="flex items-center gap-2">
-                  <Award className="h-5 w-5 text-yellow-500" />
-                  <div>
-                    <p className="text-2xl font-bold">{(d.points || 0).toLocaleString()}</p>
-                    <p className="text-xs text-muted-foreground">Chakri Coins</p>
-                  </div>
-                </div>
-                <div className="h-12 w-px bg-border" />
-                <div>
-                  <p className="text-2xl font-bold">{(profile.permanentConnections || []).length}</p>
-                  <p className="text-xs text-muted-foreground">Connections</p>
-                </div>
+
+              <div className="flex gap-6 mt-4 pt-4 border-t">
+                <div className="text-center"><p className="text-2xl font-bold">{(profile.permanentConnections || []).length}</p><p className="text-xs text-muted-foreground">Connections</p></div>
+                <div className="text-center"><p className="text-2xl font-bold">{(profile.points || 0).toLocaleString()}</p><p className="text-xs text-muted-foreground">Coins</p></div>
+                <div className="text-center"><p className="text-2xl font-bold">{recs.length}</p><p className="text-xs text-muted-foreground">Recommendations</p></div>
               </div>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      <Tabs defaultValue="experience" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="experience" data-testid="tab-experience">Experience</TabsTrigger>
-          <TabsTrigger value="education" data-testid="tab-education">Education</TabsTrigger>
-          <TabsTrigger value="skills" data-testid="tab-skills">Skills</TabsTrigger>
-          <TabsTrigger value="certifications" data-testid="tab-certifications">Certifications</TabsTrigger>
-          <TabsTrigger value="ratings">Ratings</TabsTrigger>
+      <Tabs defaultValue="recommendations">
+        <TabsList className="mb-4">
+          <TabsTrigger value="recommendations">Recommendations</TabsTrigger>
+          <TabsTrigger value="skills">Skills</TabsTrigger>
         </TabsList>
 
-        {/* EXPERIENCE */}
-        <TabsContent value="experience">
-          <Card>
-            <CardHeader><CardTitle className="flex items-center gap-2"><Briefcase className="h-5 w-5" />Work Experience</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              {isEditing ? (
-                <>
-                  {draft.workHistory.map((w, i) => (
-                    <div key={i} className="p-3 border rounded-lg space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium text-muted-foreground">Entry {i + 1}</span>
-                        <Button variant="ghost" size="sm" onClick={() => setDraft((p) => ({ ...p, workHistory: p.workHistory.filter((_, j) => j !== i) }))}>
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <Input placeholder="Company" value={w.company} onChange={(e) => { const wh = [...draft.workHistory]; wh[i] = { ...wh[i], company: e.target.value }; setField("workHistory", wh); }} />
-                        <Input placeholder="Position" value={w.position} onChange={(e) => { const wh = [...draft.workHistory]; wh[i] = { ...wh[i], position: e.target.value }; setField("workHistory", wh); }} />
-                      </div>
-                      <Input placeholder="Duration e.g. Jan 2020 - Present" value={w.duration} onChange={(e) => { const wh = [...draft.workHistory]; wh[i] = { ...wh[i], duration: e.target.value }; setField("workHistory", wh); }} />
-                      <Textarea placeholder="Description" rows={2} value={w.description} onChange={(e) => { const wh = [...draft.workHistory]; wh[i] = { ...wh[i], description: e.target.value }; setField("workHistory", wh); }} />
-                    </div>
-                  ))}
-                  <Button variant="outline" className="w-full" onClick={() => setDraft((p) => ({ ...p, workHistory: [...p.workHistory, { company: "", position: "", duration: "", description: "" }] }))}>
-                    <Plus className="h-4 w-4 mr-2" />Add Experience
-                  </Button>
-                </>
-              ) : d.workHistory.length > 0 ? (
-                d.workHistory.map((w, i) => (
-                  <div key={i} className="flex gap-4 pb-4 border-b last:border-0 last:pb-0">
-                    <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                      <Briefcase className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="font-semibold">{w.position}</p>
-                      <p className="text-sm text-muted-foreground">{w.company}</p>
-                      <p className="text-xs text-muted-foreground">{w.duration}</p>
-                      {w.description && <p className="text-sm mt-1">{w.description}</p>}
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-muted-foreground text-sm">No experience added yet. Click "Edit Profile" to add.</p>
+        <TabsContent value="recommendations">
+          {recs.length === 0 ? (
+            <Card><CardContent className="py-12 text-center text-muted-foreground">
+              <ThumbsUp className="h-10 w-10 mx-auto mb-3 opacity-20" />
+              <p className="font-medium">No recommendations yet</p>
+              <p className="text-sm mt-1">Recommendations appear here after you successfully refer someone</p>
+            </CardContent></Card>
+          ) : (
+            <div className="space-y-4">
+              {avgSpeed && (
+                <Card className="bg-primary/5 border-primary/20">
+                  <CardContent className="p-4 flex gap-8">
+                    <div className="text-center"><p className="text-2xl font-bold text-primary">{avgSpeed}</p><p className="text-xs text-muted-foreground">Avg Speed</p></div>
+                    <div className="text-center"><p className="text-2xl font-bold text-primary">{avgExp}</p><p className="text-xs text-muted-foreground">Avg Experience</p></div>
+                    <div className="text-center"><p className="text-2xl font-bold text-primary">{recs.length}</p><p className="text-xs text-muted-foreground">Total</p></div>
+                  </CardContent>
+                </Card>
               )}
-            </CardContent>
-          </Card>
+              {recs.map(r => (
+                <Card key={r.id}>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="font-medium text-sm">{r.fromName}</p>
+                      <div className="flex gap-1">
+                        {[1,2,3,4,5].map(i => <Star key={i} className={`h-3.5 w-3.5 ${i <= r.experience ? "text-yellow-400 fill-yellow-400" : "text-muted-foreground"}`} />)}
+                      </div>
+                    </div>
+                    <p className="text-sm text-muted-foreground">{r.text}</p>
+                    <p className="text-xs text-muted-foreground mt-2">{formatDistanceToNow(new Date(r.createdAt), { addSuffix: true })}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </TabsContent>
 
-        {/* EDUCATION */}
-        <TabsContent value="education">
-          <Card>
-            <CardHeader><CardTitle className="flex items-center gap-2"><GraduationCap className="h-5 w-5" />Education</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              {isEditing ? (
-                <>
-                  {draft.education.map((e, i) => (
-                    <div key={i} className="p-3 border rounded-lg space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium text-muted-foreground">Entry {i + 1}</span>
-                        <Button variant="ghost" size="sm" onClick={() => setDraft((p) => ({ ...p, education: p.education.filter((_, j) => j !== i) }))}>
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                      <Input placeholder="Institution e.g. IIT Bombay" value={e.institution} onChange={(ev) => { const ed = [...draft.education]; ed[i] = { ...ed[i], institution: ev.target.value }; setField("education", ed); }} />
-                      <Input placeholder="Degree e.g. B.Tech Computer Science" value={e.degree} onChange={(ev) => { const ed = [...draft.education]; ed[i] = { ...ed[i], degree: ev.target.value }; setField("education", ed); }} />
-                      <Input placeholder="Duration e.g. 2018 - 2022" value={e.duration} onChange={(ev) => { const ed = [...draft.education]; ed[i] = { ...ed[i], duration: ev.target.value }; setField("education", ed); }} />
-                    </div>
-                  ))}
-                  <Button variant="outline" className="w-full" onClick={() => setDraft((p) => ({ ...p, education: [...p.education, { institution: "", degree: "", duration: "" }] }))}>
-                    <Plus className="h-4 w-4 mr-2" />Add Education
-                  </Button>
-                </>
-              ) : d.education.length > 0 ? (
-                d.education.map((e, i) => (
-                  <div key={i} className="flex gap-4 pb-4 border-b last:border-0 last:pb-0" data-testid={`education-${i}`}>
-                    <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center shrink-0"><GraduationCap className="h-5 w-5 text-primary" /></div>
-                    <div>
-                      <p className="font-semibold">{e.degree}</p>
-                      <p className="text-sm text-muted-foreground">{e.institution}</p>
-                      <p className="text-xs text-muted-foreground">{e.duration}</p>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-muted-foreground text-sm">No education added yet. Click "Edit Profile" to add.</p>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* SKILLS */}
         <TabsContent value="skills">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>Skills</CardTitle>
-                <span className="text-sm text-muted-foreground">{d.skills.length} skills</span>
+          <Card><CardContent className="p-4">
+            {(profile.skills || []).length === 0 ? (
+              <p className="text-muted-foreground text-sm">No skills added yet. Edit your profile to add skills.</p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {(profile.skills || []).map((s: string) => <Badge key={s} variant="secondary">{s}</Badge>)}
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-2 mb-4">
-                {d.skills.length > 0 ? d.skills.map((skill) => (
-                  <SkillBadge key={skill} skill={skill} endorsements={Math.floor(Math.random() * 30) + 5}
-                    editable={isEditing}
-                    onRemove={(s) => setDraft((p) => ({ ...p, skills: p.skills.filter((x) => x !== s) }))} />
-                )) : <p className="text-muted-foreground text-sm">No skills added yet. Click "Edit Profile" to add.</p>}
-              </div>
-              {isEditing && (
-                <div className="pt-4 border-t">
-                  <p className="text-sm text-muted-foreground mb-2">Add a new skill</p>
-                  <div className="flex gap-2">
-                    <Input placeholder="e.g. React, Java, SQL" value={newSkill}
-                      onChange={(e) => setNewSkill(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addSkill())}
-                      data-testid="input-add-skill" />
-                    <Button onClick={addSkill} data-testid="button-add-skill">Add</Button>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* CERTIFICATIONS */}
-        <TabsContent value="certifications">
-          <Card>
-            <CardHeader><CardTitle className="flex items-center gap-2"><FileText className="h-5 w-5" />Certifications</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              {isEditing ? (
-                <>
-                  {draft.certifications.map((c, i) => (
-                    <div key={i} className="p-3 border rounded-lg space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium text-muted-foreground">Entry {i + 1}</span>
-                        <Button variant="ghost" size="sm" onClick={() => setDraft((p) => ({ ...p, certifications: p.certifications.filter((_, j) => j !== i) }))}>
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                      <Input placeholder="Certificate Name e.g. AWS Solutions Architect" value={c.name} onChange={(e) => { const ct = [...draft.certifications]; ct[i] = { ...ct[i], name: e.target.value }; setField("certifications", ct); }} />
-                      <div className="grid grid-cols-2 gap-2">
-                        <Input placeholder="Issuer e.g. Amazon" value={c.issuer} onChange={(e) => { const ct = [...draft.certifications]; ct[i] = { ...ct[i], issuer: e.target.value }; setField("certifications", ct); }} />
-                        <Input placeholder="Year e.g. 2023" value={c.year} onChange={(e) => { const ct = [...draft.certifications]; ct[i] = { ...ct[i], year: e.target.value }; setField("certifications", ct); }} />
-                      </div>
-                    </div>
-                  ))}
-                  <Button variant="outline" className="w-full" onClick={() => setDraft((p) => ({ ...p, certifications: [...p.certifications, { name: "", issuer: "", year: "" }] }))}>
-                    <Plus className="h-4 w-4 mr-2" />Add Certification
-                  </Button>
-                </>
-              ) : d.certifications.length > 0 ? (
-                d.certifications.map((c, i) => (
-                  <div key={i} className="flex items-start gap-4 p-4 rounded-lg border" data-testid={`certification-${i}`}>
-                    <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center shrink-0"><Award className="h-6 w-6 text-primary" /></div>
-                    <div className="flex-1">
-                      <h4 className="font-semibold">{c.name}</h4>
-                      <p className="text-sm text-muted-foreground">{c.issuer}</p>
-                      <div className="flex items-center gap-2 mt-2">
-                        <Badge variant="secondary" className="text-xs">Verified</Badge>
-                        <span className="text-xs text-muted-foreground">{c.year}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-muted-foreground text-sm">No certifications added yet. Click "Edit Profile" to add.</p>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* RATINGS */}
-        <TabsContent value="ratings">
-          <Card>
-            <CardHeader><CardTitle className="flex items-center gap-2"><Star className="h-5 w-5 text-yellow-500" />My Ratings</CardTitle></CardHeader>
-            <CardContent className="space-y-3">
-              {(() => {
-                const ratings = getUserRatings();
-                if (ratings.length === 0) return <p className="text-muted-foreground text-sm">No ratings yet. Complete referrals to get rated.</p>;
-                const avg = (ratings.reduce((s, r) => s + r.overall, 0) / ratings.length).toFixed(1);
-                return <>
-                  <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
-                    <Star className="h-6 w-6 text-yellow-500 fill-yellow-400" />
-                    <div>
-                      <p className="text-2xl font-bold">{avg}</p>
-                      <p className="text-xs text-muted-foreground">{ratings.length} rating{ratings.length !== 1 ? "s" : ""}</p>
-                    </div>
-                  </div>
-                  {ratings.map((r, i) => (
-                    <div key={i} className="border rounded-lg p-3 space-y-1">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium">{r.fromName}</span>
-                        <div className="flex gap-0.5">{[1,2,3,4,5].map(n => <Star key={n} className={"h-3.5 w-3.5 " + (n <= r.overall ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground")} />)}</div>
-                      </div>
-                      <div className="flex gap-4 text-xs text-muted-foreground">
-                        <span>Speed: {r.speed}⭐</span>
-                        <span>Communication: {r.communication}⭐</span>
-                      </div>
-                      {r.comment && <p className="text-xs text-muted-foreground italic">"{r.comment}"</p>}
-                    </div>
-                  ))}
-                </>;
-              })()}
-            </CardContent>
-          </Card>
+            )}
+          </CardContent></Card>
         </TabsContent>
       </Tabs>
     </div>

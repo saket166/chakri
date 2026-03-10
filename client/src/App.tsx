@@ -22,7 +22,7 @@ import Privacy from "@/pages/privacy";
 import Contact from "@/pages/contact";
 import NotFound from "@/pages/not-found";
 import { useState } from "react";
-import { isLoggedIn } from "@/lib/userStore";
+import { isLoggedIn } from "@/lib/api";
 
 function AppLayout() {
   const [location] = useLocation();
