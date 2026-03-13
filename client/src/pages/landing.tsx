@@ -53,7 +53,7 @@ export default function Landing({ onLogin }: { onLogin?: () => void }) {
     if (password !== confirmPassword) { setError("Passwords do not match."); return; }
     setLoading(true);
     try {
-      const res = await api.auth.signup({ name, email, password, phone, headline, company, location: location2 });
+      const res = await api.auth.signup({ name, email, password, phone, headline, company, location: userLocation });
       setPendingUserId(res.userId);
       setPendingEmail(email);
       setStep("otp");
@@ -236,7 +236,7 @@ export default function Landing({ onLogin }: { onLogin?: () => void }) {
                           </div>
                           <div className="space-y-1.5">
                             <Label>Location</Label>
-                            <Input placeholder="Bengaluru" value={location2} onChange={e => setLocation2(e.target.value)} />
+                            <Input placeholder="Bengaluru" value={userLocation} onChange={e => setUserLocation(e.target.value)} />
                           </div>
                         </div>
                         <div className="space-y-1.5">
