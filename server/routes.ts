@@ -3,12 +3,11 @@ import { createServer, type Server } from "http";
 import { db } from "./db";
 import { users, referralRequests, feedItems, recommendations, directMessages, chatMessages } from "@shared/schema";
 import { eq, and, or, ilike, desc, sql } from "drizzle-orm";
-import { randomUUID } from "crypto";
+import { registerAuthRoutes } from "./auth";
 
-function uid() { return randomUUID(); }
-
-// ─── Cost by role ─────────────────────────────────────────────────────────────
-const ROLE_COSTS = [
+function getUser(req: Request): string | null {
+  return (req.headers["x-user-id"] as string) || null;
+}
   { keywords: ["intern","fresher","trainee","graduate"],        cost: 100 },
   { keywords: ["junior","sde-1","sde1","analyst"],              cost: 200 },
   { keywords: ["senior","sde-2","sde2","lead","specialist"],    cost: 400 },
@@ -33,28 +32,9 @@ function getUser(req: Request): string | null {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  registerAuthRoutes(app);
 
   // ── Users ──────────────────────────────────────────────────────────────────
-
-  // Upsert user on login (called after Google OAuth)
-  app.post("/api/users/upsert", async (req: Request, res: Response) => {
-    const { id, email, name, avatarUrl } = req.body;
-    if (!id || !email) return res.status(400).json({ error: "id and email required" });
-    try {
-      const existing = await db.select().from(users).where(eq(users.id, id)).limit(1);
-      if (existing.length === 0) {
-        const [user] = await db.insert(users).values({ id, email, name: name || "", avatarUrl: avatarUrl || "", points: 500 }).returning();
-        // Welcome feed item
-        await db.insert(feedItems).values({ type: "new_member", text: `${name || email} just joined Chakri! 👋` });
-        return res.json(user);
-      }
-      // Update name/avatar if changed
-      const [user] = await db.update(users).set({ name: name || existing[0].name, avatarUrl: avatarUrl || existing[0].avatarUrl }).where(eq(users.id, id)).returning();
-      return res.json(user);
-    } catch (e: any) { return res.status(500).json({ error: e.message }); }
-  });
-
-  // Get my profile
   app.get("/api/users/me", async (req: Request, res: Response) => {
     const userId = getUser(req);
     if (!userId) return res.status(401).json({ error: "Unauthorized" });
@@ -261,7 +241,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ── Feed ───────────────────────────────────────────────────────────────────
 
   app.get("/api/feed", async (_req: Request, res: Response) => {
-    const items = await db.select().from(feedItems).orderBy(desc(feedItems.createdAt)).limit(50);
+    const items = await db.select().from(feedItems)
+      .where(sql`type != 'new_member'`)
+      .orderBy(desc(feedItems.createdAt)).limit(50);
     return res.json(items);
   });
 

@@ -5,10 +5,10 @@ export default defineConfig({
   schema: "./shared/schema.ts",
   dialect: "postgresql",
   dbCredentials: {
-    host: "aws-1-ap-south-1.pooler.supabase.com",
+    host: process.env.DB_HOST || "aws-1-ap-south-1.pooler.supabase.com",
     port: 5432,
-    user: "postgres.eqmritowkzgguapkypif",
-    password: "Chakri2458Prod",
+    user: process.env.DB_USER || "postgres.eqmritowkzgguapkypif",
+    password: process.env.DB_PASSWORD || "",
     database: "postgres",
     ssl: { rejectUnauthorized: false },
   },

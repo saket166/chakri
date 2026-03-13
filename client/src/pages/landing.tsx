@@ -5,37 +5,37 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
-import { Award, Users, Briefcase, Loader2 } from "lucide-react";
-import { SiGoogle } from "react-icons/si";
+import { Award, Users, Briefcase, Loader2, Mail, ArrowLeft, RefreshCw } from "lucide-react";
 import { api, setSession } from "@/lib/api";
-import { randomUUID } from "@/lib/uuid";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+
+type Step = "form" | "otp";
 
 export default function Landing({ onLogin }: { onLogin?: () => void }) {
   const [, setLocation] = useLocation();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Login state
+  // Shared OTP state
+  const [step, setStep] = useState<Step>("form");
+  const [pendingUserId, setPendingUserId] = useState("");
+  const [pendingEmail, setPendingEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [resendCooldown, setResendCooldown] = useState(0);
+
+  // Sign up fields
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [headline, setHeadline] = useState("");
+  const [company, setCompany] = useState("");
+  const [location, setLocation2] = useState("");
+
+  // Sign in fields
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
-
-  // Signup state
-  const [signupName, setSignupName] = useState("");
-  const [signupEmail, setSignupEmail] = useState("");
-  const [signupPhone, setSignupPhone] = useState("");
-  const [signupPassword, setSignupPassword] = useState("");
-  const [signupHeadline, setSignupHeadline] = useState("");
-  const [signupCompany, setSignupCompany] = useState("");
-  const [signupLocation, setSignupLocation] = useState("");
-
-  // Google flow
-  const [showGooglePrompt, setShowGooglePrompt] = useState(false);
-  const [googleName, setGoogleName] = useState("");
-  const [googleEmail, setGoogleEmail] = useState("");
-  const [googleCompany, setGoogleCompany] = useState("");
-  const [googleHeadline, setGoogleHeadline] = useState("");
-  const [googleLocation, setGoogleLocation] = useState("");
 
   const enterApp = (user: any) => {
     setSession(user.id, user);
@@ -43,43 +43,106 @@ export default function Landing({ onLogin }: { onLogin?: () => void }) {
     setLocation("/home");
   };
 
+  // ── Sign Up ──────────────────────────────────────────────────────────────
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    if (!name.trim()) { setError("Please enter your full name."); return; }
+    if (!email.trim()) { setError("Please enter your email."); return; }
+    if (password.length < 6) { setError("Password must be at least 6 characters."); return; }
+    if (password !== confirmPassword) { setError("Passwords do not match."); return; }
+    setLoading(true);
+    try {
+      const res = await api.auth.signup({ name, email, password, phone, headline, company, location: location2 });
+      setPendingUserId(res.userId);
+      setPendingEmail(email);
+      setStep("otp");
+    } catch (e: any) { setError(e.message || "Signup failed."); }
+    finally { setLoading(false); }
+  };
+
+  // ── OTP Verify ───────────────────────────────────────────────────────────
+  const handleVerifyOtp = async () => {
+    if (otp.length !== 6) { setError("Please enter the full 6-digit code."); return; }
+    setError(""); setLoading(true);
+    try {
+      const user = await api.auth.verifyOtp(pendingUserId, otp);
+      enterApp(user);
+    } catch (e: any) { setError(e.message || "Invalid OTP."); }
+    finally { setLoading(false); }
+  };
+
+  const handleResendOtp = async () => {
+    if (resendCooldown > 0) return;
+    await api.auth.resendOtp(pendingUserId);
+    setResendCooldown(30);
+    const t = setInterval(() => setResendCooldown(c => { if (c <= 1) { clearInterval(t); return 0; } return c - 1; }), 1000);
+  };
+
+  // ── Sign In ──────────────────────────────────────────────────────────────
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(""); setLoading(true);
     try {
-      // For email login: we use the email as the user ID key (deterministic UUID from email)
-      const id = await deterministicId(loginEmail);
-      const user = await api.auth.upsert(id, loginEmail, "");
+      const user = await api.auth.signin(loginEmail, loginPassword);
       enterApp(user);
-    } catch (e: any) { setError("Login failed. Please check your details."); }
+    } catch (e: any) { setError(e.message || "Sign in failed."); }
     finally { setLoading(false); }
   };
 
-  const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(""); setLoading(true);
-    if (!signupName.trim() || !signupEmail.trim()) { setError("Name and email are required."); setLoading(false); return; }
-    try {
-      const id = await deterministicId(signupEmail);
-      const user = await api.auth.upsert(id, signupEmail, signupName);
-      // Save additional profile fields
-      await api.auth.update({ phone: signupPhone, headline: signupHeadline, company: signupCompany, location: signupLocation });
-      enterApp({ ...user, name: signupName, company: signupCompany, headline: signupHeadline });
-    } catch (e: any) { setError("Signup failed. Please try again."); }
-    finally { setLoading(false); }
-  };
-
-  const handleGooglePromptSubmit = async () => {
-    setError(""); setLoading(true);
-    if (!googleName.trim() || !googleEmail.trim()) { setError("Name and email are required."); setLoading(false); return; }
-    try {
-      const id = await deterministicId(googleEmail);
-      const user = await api.auth.upsert(id, googleEmail, googleName);
-      await api.auth.update({ company: googleCompany, headline: googleHeadline, location: googleLocation });
-      enterApp({ ...user, name: googleName, company: googleCompany, headline: googleHeadline });
-    } catch (e: any) { setError("Failed. Please try again."); }
-    finally { setLoading(false); }
-  };
+  // ── OTP Screen ───────────────────────────────────────────────────────────
+  if (step === "otp") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary/10 to-background px-4">
+        <Card className="w-full max-w-md shadow-lg">
+          <CardHeader className="text-center">
+            <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
+              <Mail className="h-7 w-7 text-primary" />
+            </div>
+            <CardTitle>Check your email</CardTitle>
+            <CardDescription>
+              We sent a 6-digit verification code to<br />
+              <span className="font-medium text-foreground">{pendingEmail}</span>
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            <div className="flex justify-center">
+              <InputOTP maxLength={6} value={otp} onChange={setOtp}>
+                <InputOTPGroup>
+                  <InputOTPSlot index={0} />
+                  <InputOTPSlot index={1} />
+                  <InputOTPSlot index={2} />
+                  <InputOTPSlot index={3} />
+                  <InputOTPSlot index={4} />
+                  <InputOTPSlot index={5} />
+                </InputOTPGroup>
+              </InputOTP>
+            </div>
+            {error && <p className="text-sm text-destructive text-center">{error}</p>}
+            <Button className="w-full" onClick={handleVerifyOtp} disabled={loading || otp.length !== 6}>
+              {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              Verify & Enter Chakri
+            </Button>
+            <div className="flex items-center justify-between text-sm">
+              <button onClick={() => { setStep("form"); setOtp(""); setError(""); }} className="flex items-center gap-1 text-muted-foreground hover:text-foreground">
+                <ArrowLeft className="h-3.5 w-3.5" />Back
+              </button>
+              <button onClick={handleResendOtp} disabled={resendCooldown > 0} className="flex items-center gap-1 text-primary hover:underline disabled:opacity-50">
+                <RefreshCw className="h-3.5 w-3.5" />
+                {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend code"}
+              </button>
+            </div>
+            <p className="text-xs text-center text-muted-foreground">
+              Can't find the email? Check your spam folder.<br/>
+              {!import.meta.env.VITE_RESEND_CONFIGURED && (
+                <span className="text-yellow-600">📋 Dev mode: check server logs for the OTP code.</span>
+              )}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -107,15 +170,11 @@ export default function Landing({ onLogin }: { onLogin?: () => void }) {
                 </p>
                 <div className="grid grid-cols-2 gap-4 pt-4">
                   <div className="flex items-center gap-3">
-                    <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Users className="h-6 w-6 text-primary" />
-                    </div>
+                    <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center"><Users className="h-6 w-6 text-primary" /></div>
                     <div><p className="font-semibold">10K+ Users</p><p className="text-sm text-muted-foreground">Active network</p></div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Briefcase className="h-6 w-6 text-primary" />
-                    </div>
+                    <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center"><Briefcase className="h-6 w-6 text-primary" /></div>
                     <div><p className="font-semibold">5K+ Referrals</p><p className="text-sm text-muted-foreground">Success stories</p></div>
                   </div>
                 </div>
@@ -127,97 +186,76 @@ export default function Landing({ onLogin }: { onLogin?: () => void }) {
                   <CardDescription>Sign in or create an account to get started</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {showGooglePrompt ? (
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg">
-                        <SiGoogle className="h-5 w-5 text-blue-500 shrink-0" />
-                        <p className="text-sm text-blue-700 dark:text-blue-300">Complete your Chakri profile</p>
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Full Name *</Label>
-                        <Input placeholder="Priya Sharma" value={googleName} onChange={e => setGoogleName(e.target.value)} />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Email *</Label>
-                        <Input type="email" placeholder="you@gmail.com" value={googleEmail} onChange={e => setGoogleEmail(e.target.value)} />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Current Role</Label>
-                        <Input placeholder="Software Engineer at Infosys" value={googleHeadline} onChange={e => setGoogleHeadline(e.target.value)} />
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="space-y-2"><Label>Company</Label><Input placeholder="Infosys" value={googleCompany} onChange={e => setGoogleCompany(e.target.value)} /></div>
-                        <div className="space-y-2"><Label>Location</Label><Input placeholder="Bengaluru" value={googleLocation} onChange={e => setGoogleLocation(e.target.value)} /></div>
-                      </div>
-                      {error && <p className="text-sm text-destructive">{error}</p>}
-                      <Button className="w-full" onClick={handleGooglePromptSubmit} disabled={loading}>
-                        {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                        Complete Sign Up 🎉
-                      </Button>
-                      <p className="text-xs text-center text-muted-foreground">🎁 Get 500 Chakri Coins as welcome bonus!</p>
-                    </div>
-                  ) : (
-                    <Tabs defaultValue="login" className="w-full">
-                      <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="login">Sign In</TabsTrigger>
-                        <TabsTrigger value="signup">Sign Up</TabsTrigger>
-                      </TabsList>
+                  <Tabs defaultValue="login" className="w-full">
+                    <TabsList className="grid w-full grid-cols-2">
+                      <TabsTrigger value="login">Sign In</TabsTrigger>
+                      <TabsTrigger value="signup">Sign Up</TabsTrigger>
+                    </TabsList>
 
-                      <TabsContent value="login" className="space-y-4">
-                        <form onSubmit={handleLogin} className="space-y-4">
-                          <div className="space-y-2">
-                            <Label>Email</Label>
-                            <Input type="email" placeholder="you@example.com" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} required />
+                    {/* ── SIGN IN ── */}
+                    <TabsContent value="login" className="space-y-4 pt-2">
+                      <form onSubmit={handleLogin} className="space-y-4">
+                        <div className="space-y-2">
+                          <Label>Email</Label>
+                          <Input type="email" placeholder="you@example.com" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} required />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Password</Label>
+                          <Input type="password" placeholder="••••••••" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} required />
+                        </div>
+                        {error && <p className="text-sm text-destructive">{error}</p>}
+                        <Button type="submit" className="w-full" disabled={loading}>
+                          {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}Sign In
+                        </Button>
+                      </form>
+                    </TabsContent>
+
+                    {/* ── SIGN UP ── */}
+                    <TabsContent value="signup" className="space-y-3 pt-2">
+                      <form onSubmit={handleSignup} className="space-y-3">
+                        <div className="space-y-1.5">
+                          <Label>Full Name *</Label>
+                          <Input placeholder="Priya Sharma" value={name} onChange={e => setName(e.target.value)} required />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label>Email *</Label>
+                          <Input type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} required />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label>Phone</Label>
+                          <Input type="tel" placeholder="+91 98765 43210" value={phone} onChange={e => setPhone(e.target.value)} />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label>Current Role</Label>
+                          <Input placeholder="Software Engineer at Infosys" value={headline} onChange={e => setHeadline(e.target.value)} />
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="space-y-1.5">
+                            <Label>Company</Label>
+                            <Input placeholder="Infosys" value={company} onChange={e => setCompany(e.target.value)} />
                           </div>
-                          <div className="space-y-2">
-                            <Label>Password</Label>
-                            <Input type="password" placeholder="••••••••" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} required />
-                          </div>
-                          {error && <p className="text-sm text-destructive">{error}</p>}
-                          <Button type="submit" className="w-full" disabled={loading}>
-                            {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}Sign In
-                          </Button>
-                        </form>
-                        <div className="relative">
-                          <div className="absolute inset-0 flex items-center"><Separator /></div>
-                          <div className="relative flex justify-center text-xs uppercase">
-                            <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+                          <div className="space-y-1.5">
+                            <Label>Location</Label>
+                            <Input placeholder="Bengaluru" value={location2} onChange={e => setLocation2(e.target.value)} />
                           </div>
                         </div>
-                        <Button variant="outline" className="w-full" onClick={() => setShowGooglePrompt(true)}>
-                          <SiGoogle className="h-4 w-4 mr-2" />Continue with Google
-                        </Button>
-                      </TabsContent>
-
-                      <TabsContent value="signup" className="space-y-4">
-                        <form onSubmit={handleSignup} className="space-y-3">
-                          <div className="space-y-2"><Label>Full Name *</Label><Input placeholder="Priya Sharma" value={signupName} onChange={e => setSignupName(e.target.value)} required /></div>
-                          <div className="space-y-2"><Label>Email *</Label><Input type="email" placeholder="you@example.com" value={signupEmail} onChange={e => setSignupEmail(e.target.value)} required /></div>
-                          <div className="space-y-2"><Label>Phone</Label><Input type="tel" placeholder="+91 98765 43210" value={signupPhone} onChange={e => setSignupPhone(e.target.value)} /></div>
-                          <div className="space-y-2"><Label>Current Role</Label><Input placeholder="Software Engineer at Infosys" value={signupHeadline} onChange={e => setSignupHeadline(e.target.value)} /></div>
-                          <div className="grid grid-cols-2 gap-2">
-                            <div className="space-y-2"><Label>Company</Label><Input placeholder="Infosys" value={signupCompany} onChange={e => setSignupCompany(e.target.value)} /></div>
-                            <div className="space-y-2"><Label>Location</Label><Input placeholder="Bengaluru" value={signupLocation} onChange={e => setSignupLocation(e.target.value)} /></div>
-                          </div>
-                          <div className="space-y-2"><Label>Password *</Label><Input type="password" placeholder="••••••••" value={signupPassword} onChange={e => setSignupPassword(e.target.value)} required /></div>
-                          {error && <p className="text-sm text-destructive">{error}</p>}
-                          <Button type="submit" className="w-full" disabled={loading}>
-                            {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}Create Account
-                          </Button>
-                          <p className="text-xs text-center text-muted-foreground">🎁 Get 500 Chakri Coins as welcome bonus!</p>
-                        </form>
-                        <div className="relative">
-                          <div className="absolute inset-0 flex items-center"><Separator /></div>
-                          <div className="relative flex justify-center text-xs uppercase">
-                            <span className="bg-background px-2 text-muted-foreground">Or sign up with</span>
-                          </div>
+                        <div className="space-y-1.5">
+                          <Label>Password *</Label>
+                          <Input type="password" placeholder="Min 6 characters" value={password} onChange={e => setPassword(e.target.value)} required />
                         </div>
-                        <Button variant="outline" className="w-full" onClick={() => setShowGooglePrompt(true)}>
-                          <SiGoogle className="h-4 w-4 mr-2" />Continue with Google
+                        <div className="space-y-1.5">
+                          <Label>Confirm Password *</Label>
+                          <Input type="password" placeholder="••••••••" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required />
+                        </div>
+                        {error && <p className="text-sm text-destructive">{error}</p>}
+                        <Button type="submit" className="w-full" disabled={loading}>
+                          {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                          Create Account & Verify Email
                         </Button>
-                      </TabsContent>
-                    </Tabs>
-                  )}
+                        <p className="text-xs text-center text-muted-foreground">🎁 500 Chakri Coins welcome bonus after verification!</p>
+                      </form>
+                    </TabsContent>
+                  </Tabs>
                 </CardContent>
               </Card>
             </div>
@@ -228,13 +266,12 @@ export default function Landing({ onLogin }: { onLogin?: () => void }) {
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold mb-4">How Chakri Works</h2>
-              <p className="text-muted-foreground">Simple, effective, and rewarding</p>
             </div>
             <div className="grid md:grid-cols-3 gap-8">
               {[
-                { icon: Users, title: "Connect", desc: "Build your professional network with people working at your target companies" },
-                { icon: Briefcase, title: "Request Referrals", desc: "Post referral requests that match your skills and career goals" },
-                { icon: Award, title: "Earn Coins", desc: "Help others and earn Chakri coins for every successful referral" },
+                { icon: Users,    title: "Connect",          desc: "Build your professional network with people at your target companies" },
+                { icon: Briefcase,title: "Request Referrals", desc: "Post referral requests that match your skills and career goals" },
+                { icon: Award,    title: "Earn Coins",        desc: "Help others and earn Chakri coins for every successful referral" },
               ].map(item => (
                 <Card key={item.title}><CardHeader>
                   <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4"><item.icon className="h-6 w-6 text-primary" /></div>
@@ -254,13 +291,4 @@ export default function Landing({ onLogin }: { onLogin?: () => void }) {
       </footer>
     </div>
   );
-}
-
-// Deterministic UUID from email using subtle crypto — same email always gets same ID
-async function deterministicId(email: string): Promise<string> {
-  const normalized = email.toLowerCase().trim();
-  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(normalized));
-  const arr = Array.from(new Uint8Array(buf));
-  const hex = arr.map(b => b.toString(16).padStart(2, "0")).join("");
-  return `${hex.slice(0,8)}-${hex.slice(8,12)}-4${hex.slice(13,16)}-a${hex.slice(17,20)}-${hex.slice(20,32)}`;
 }

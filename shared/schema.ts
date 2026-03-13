@@ -22,6 +22,10 @@ export const users = pgTable("users", {
   education:    jsonb("education").default([]),
   certifications: jsonb("certifications").default([]),
   permanentConnections: jsonb("permanent_connections").default([]),
+  passwordHash: text("password_hash").default(""),
+  otpCode:      text("otp_code").default(""),
+  otpExpiresAt: timestamp("otp_expires_at"),
+  emailVerified:boolean("email_verified").default(false),
   createdAt:    timestamp("created_at").defaultNow(),
 });
 

@@ -32,8 +32,10 @@ async function patch<T>(path: string, body?: any): Promise<T> {
 // ── Auth ────────────────────────────────────────────────────────────────────
 export const api = {
   auth: {
-    upsert: (id: string, email: string, name: string, avatarUrl?: string) =>
-      post<any>("/users/upsert", { id, email, name, avatarUrl }),
+    signup: (data: any) => post<any>("/auth/signup", data),
+    verifyOtp: (userId: string, otp: string) => post<any>("/auth/verify-otp", { userId, otp }),
+    signin: (email: string, password: string) => post<any>("/auth/signin", { email, password }),
+    resendOtp: (userId: string) => post<any>("/auth/resend-otp", { userId }),
     me: () => get<any>("/users/me"),
     update: (data: any) => patch<any>("/users/me", data),
   },
