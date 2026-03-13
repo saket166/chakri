@@ -8,6 +8,8 @@ import { registerAuthRoutes } from "./auth";
 function getUser(req: Request): string | null {
   return (req.headers["x-user-id"] as string) || null;
 }
+
+const ROLE_COSTS = [
   { keywords: ["intern","fresher","trainee","graduate"],        cost: 100 },
   { keywords: ["junior","sde-1","sde1","analyst"],              cost: 200 },
   { keywords: ["senior","sde-2","sde2","lead","specialist"],    cost: 400 },
