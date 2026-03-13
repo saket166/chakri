@@ -28,11 +28,6 @@ function costForRole(position: string): number {
   return 300;
 }
 
-// Simple auth middleware — reads userId from header set by frontend
-function getUser(req: Request): string | null {
-  return (req.headers["x-user-id"] as string) || null;
-}
-
 export async function registerRoutes(app: Express): Promise<Server> {
   registerAuthRoutes(app);
 
