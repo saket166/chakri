@@ -31,7 +31,7 @@ export default function Landing({ onLogin }: { onLogin?: () => void }) {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [headline, setHeadline] = useState("");
   const [company, setCompany] = useState("");
-  const [location, setLocation2] = useState("");
+  const [userLocation, setUserLocation] = useState("");
 
   // Sign in fields
   const [loginEmail, setLoginEmail] = useState("");
