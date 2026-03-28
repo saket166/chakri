@@ -69,9 +69,14 @@ export default function SearchPage() {
                 </div>
                 <div className="flex gap-2 shrink-0">
                   {isConnected ? (
-                    <Button size="sm" variant="outline" onClick={() => setLocation("/messages")}>
-                      <MessageCircle className="h-3.5 w-3.5 mr-1" />Message
-                    </Button>
+                    <>
+                      <Badge variant="secondary" className="text-xs flex items-center gap-1">
+                        <CheckCircle className="h-3 w-3 text-green-500" />Connected
+                      </Badge>
+                      <Button size="sm" variant="outline" onClick={() => setLocation("/messages")}>
+                        <MessageCircle className="h-3.5 w-3.5 mr-1" />Message
+                      </Button>
+                    </>
                   ) : (
                     <Button size="sm" onClick={() => handleConnect(u)}>
                       <UserPlus className="h-3.5 w-3.5 mr-1" />Connect

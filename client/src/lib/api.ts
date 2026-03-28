@@ -59,7 +59,11 @@ export const api = {
   recommendations: {
     post: (data: any) => post<any>("/recommendations", data),
   },
-  messages: {
+  notifications: {
+    list: () => get<any[]>("/notifications"),
+    unreadCount: () => get<{ count: number }>("/notifications/unread-count"),
+    markRead: () => post<any>("/notifications/mark-read"),
+  },
     list: () => get<any[]>("/messages"),
     thread: (withId: string) => get<any[]>(`/messages/${withId}`),
     send: (toId: string, text: string) => post<any>("/messages", { toId, text }),

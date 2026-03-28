@@ -96,7 +96,20 @@ export const chatMessages = pgTable("chat_messages", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// ─── Notifications ────────────────────────────────────────────────────────────
+export const notifications = pgTable("notifications", {
+  id:        varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId:    varchar("user_id").notNull().references(() => users.id),
+  type:      text("type").notNull(),
+  // referral_accepted | referral_confirmed | referral_completed | connection_request | recommendation
+  title:     text("title").notNull(),
+  body:      text("body").notNull(),
+  read:      boolean("read").default(false),
+  linkUrl:   text("link_url").default(""),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type Notification = typeof notifications.$inferSelect;
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 export type ReferralRequest = typeof referralRequests.$inferSelect;
