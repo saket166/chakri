@@ -64,6 +64,7 @@ export const api = {
     unreadCount: () => get<{ count: number }>("/notifications/unread-count"),
     markRead: () => post<any>("/notifications/mark-read"),
   },
+  messages: {
     list: () => get<any[]>("/messages"),
     thread: (withId: string) => get<any[]>(`/messages/${withId}`),
     send: (toId: string, text: string) => post<any>("/messages", { toId, text }),
