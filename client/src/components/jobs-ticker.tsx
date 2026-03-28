@@ -3,19 +3,23 @@ import { Flame } from "lucide-react";
 
 interface Job { label: string; url: string; }
 
+// No salary — just company, role, location
 const FALLBACK_JOBS: Job[] = [
-  { label: "🔥 Google · Staff Engineer · Hyderabad · ₹85L–₹1.2Cr",   url: "https://careers.google.com/jobs/results/?q=engineer&location=India" },
-  { label: "⚡ Microsoft · Principal PM · Bengaluru · ₹60L–₹90L",     url: "https://jobs.microsoft.com/en-us/search?lc=India" },
-  { label: "🚀 Amazon · SDE-3 · Bengaluru · ₹70L–₹1.1Cr",            url: "https://www.amazon.jobs/en/search?base_query=software+engineer&loc_query=India" },
-  { label: "💼 Flipkart · Director Engineering · Bengaluru · ₹1Cr+",  url: "https://www.flipkartcareers.com/#!/joblist" },
-  { label: "🌟 Meesho · VP Product · Remote · ₹80L–₹1.2Cr",           url: "https://meesho.io/jobs" },
-  { label: "🔥 Zepto · Lead Backend · Mumbai · ₹50L–₹75L",            url: "https://www.zepto.com/careers" },
-  { label: "⚡ Razorpay · Data Scientist · Bengaluru · ₹40L–₹70L",    url: "https://razorpay.com/jobs/" },
-  { label: "🚀 CRED · Frontend Architect · Bengaluru · ₹55L–₹85L",    url: "https://careers.cred.club/" },
-  { label: "💼 Swiggy · ML Engineer · Bengaluru · ₹45L–₹80L",         url: "https://careers.swiggy.com/" },
-  { label: "🌟 PhonePe · Senior iOS Dev · Bengaluru · ₹40L–₹65L",     url: "https://www.phonepe.com/en/careers.html" },
-  { label: "🔥 Groww · DevOps Lead · Remote · ₹35L–₹55L",             url: "https://groww.in/careers" },
-  { label: "⚡ Zomato · Product Manager · Gurugram · ₹30L–₹50L",      url: "https://www.zomato.com/careers" },
+  { label: "🔥 Google · Staff Engineer · Hyderabad",        url: "https://careers.google.com/jobs/results/?q=software+engineer&location=Hyderabad" },
+  { label: "⚡ Microsoft · Principal PM · Bengaluru",        url: "https://jobs.microsoft.com/en-us/search?q=product+manager&lc=Bengaluru%2C+Karnataka%2C+India" },
+  { label: "🚀 Amazon · SDE-3 · Bengaluru",                 url: "https://www.amazon.jobs/en/search?base_query=SDE&loc_query=Bangalore%2C+Karnataka%2C+IND" },
+  { label: "💼 Flipkart · Engineering Manager · Bengaluru",  url: "https://www.flipkartcareers.com/#!/joblist" },
+  { label: "🌟 Meesho · VP Product · Remote",               url: "https://meesho.io/jobs" },
+  { label: "🔥 Zepto · Lead Backend Engineer · Mumbai",      url: "https://www.zepto.com/careers" },
+  { label: "⚡ Razorpay · Data Scientist · Bengaluru",       url: "https://razorpay.com/jobs/" },
+  { label: "🚀 CRED · Frontend Architect · Bengaluru",       url: "https://careers.cred.club/" },
+  { label: "💼 Swiggy · ML Engineer · Bengaluru",            url: "https://careers.swiggy.com/#/" },
+  { label: "🌟 PhonePe · Senior iOS Engineer · Bengaluru",   url: "https://www.phonepe.com/en/careers.html" },
+  { label: "🔥 Groww · DevOps Lead · Remote",                url: "https://groww.in/careers" },
+  { label: "⚡ Zomato · Product Manager · Gurugram",         url: "https://www.zomato.com/careers" },
+  { label: "🚀 Paytm · Backend Engineer · Noida",            url: "https://paytm.com/careers" },
+  { label: "💼 Ola · Senior Android Dev · Bengaluru",        url: "https://ola.cars/careers" },
+  { label: "🌟 Atlassian · Senior SDE · Remote India",       url: "https://www.atlassian.com/company/careers/all-jobs?location=India" },
 ];
 
 export function JobsTicker() {
@@ -25,15 +29,15 @@ export function JobsTicker() {
   const posRef = useRef(0);
 
   useEffect(() => {
-    // Try RemoteOK for real jobs
+    // Try RemoteOK — no salary shown
     fetch("https://remoteok.com/api?tag=dev")
       .then(r => r.json())
       .then((data: any[]) => {
         const listings = data.slice(1, 15).filter((j: any) => j.company && j.position);
         if (listings.length > 3) {
           const real: Job[] = listings.map((j: any) => ({
-            label: `🔥 ${j.company} · ${j.position}${j.salary_min ? ` · $${Math.round(j.salary_min/1000)}k` : ""} · Remote`,
-            url: j.url || `https://remoteok.com/l/${j.id}`,
+            label: `🔥 ${j.company} · ${j.position} · Remote`,
+            url: j.url || `https://remoteok.com/remote-jobs`,
           }));
           setJobs([...real, ...FALLBACK_JOBS]);
         }
@@ -71,7 +75,7 @@ export function JobsTicker() {
                 href={job.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-block px-6 text-sm border-r border-white/20 hover:bg-white/15 transition-colors cursor-pointer underline-offset-2 hover:underline"
+                className="inline-block px-6 text-sm border-r border-white/20 hover:bg-white/15 transition-colors cursor-pointer hover:underline underline-offset-2"
                 onMouseEnter={() => cancelAnimationFrame(animRef.current)}
                 onMouseLeave={() => {
                   const el = trackRef.current;
