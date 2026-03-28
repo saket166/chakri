@@ -12,7 +12,10 @@ export default function Connections() {
   const [, setLocation] = useLocation();
 
   useEffect(() => {
-    api.users.connections().then(setConnections).finally(() => setLoading(false));
+    api.users.connections()
+      .then(setConnections)
+      .catch(() => setConnections([]))
+      .finally(() => setLoading(false));
   }, []);
 
   return (

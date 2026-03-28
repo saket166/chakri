@@ -324,6 +324,9 @@ export default function Referrals() {
   const [showNewDialog, setShowNewDialog] = useState(false);
   const [search, setSearch] = useState("");
   const [form, setForm] = useState({ targetCompany: "", position: "", location: "", message: "" });
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [resumeBase64, setResumeBase64] = useState("");
+  const [coverLetter, setCoverLetter] = useState("");
   const [estimatedCost, setEstimatedCost] = useState(0);
   const banned = isBanned();
 
@@ -354,6 +357,9 @@ export default function Referrals() {
     if (!form.targetCompany.trim() || !form.position.trim()) {
       toast({ title: "Company and Position are required", variant: "destructive" }); return;
     }
+    if (!resumeFile) {
+      toast({ title: "Please attach your resume", variant: "destructive" }); return;
+    }
     const r = createRequest({
       requesterId: profile.id, requesterName: profile.name || "Anonymous",
       requesterHeadline: profile.headline || "",
@@ -362,6 +368,7 @@ export default function Referrals() {
     });
     if (!r.ok) { toast({ title: r.msg, variant: "destructive" }); return; }
     setForm({ targetCompany: "", position: "", location: "", message: "" });
+    setResumeFile(null); setResumeBase64(""); setCoverLetter("");
     setShowNewDialog(false);
     toast({ title: "Request posted! 🎉", description: r.msg });
   };
@@ -492,16 +499,15 @@ export default function Referrals() {
         </TabsContent>
       </Tabs>
 
-      {/* New Request Dialog */}
       <Dialog open={showNewDialog} onOpenChange={setShowNewDialog}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>Ask for a Referral</DialogTitle>
             <DialogDescription>
-              Coins are deducted upfront based on the seniority of the role. You can boost your queue position later.
+              Coins are deducted upfront based on the seniority of the role.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 pt-2">
+          <div className="overflow-y-auto flex-1 pr-1 space-y-4 pt-2">
             <div>
               <Label>Target Company *</Label>
               <Input placeholder="e.g. Google, Microsoft, Infosys"
@@ -532,6 +538,40 @@ export default function Referrals() {
                 value={form.message} onChange={e => setForm(p => ({ ...p, message: e.target.value }))} />
             </div>
 
+            {/* Resume upload — mandatory */}
+            <div>
+              <Label className="flex items-center gap-1">
+                Resume * <span className="text-destructive">required</span>
+              </Label>
+              <label className={`mt-1.5 flex items-center gap-3 border-2 border-dashed rounded-lg p-3 cursor-pointer transition-colors ${resumeFile ? "border-green-400 bg-green-50 dark:bg-green-950/20" : "border-muted-foreground/30 hover:border-primary/50"}`}>
+                <Upload className="h-5 w-5 shrink-0 text-muted-foreground" />
+                <div className="flex-1 min-w-0">
+                  {resumeFile
+                    ? <p className="text-sm font-medium text-green-700 dark:text-green-400 truncate">✓ {resumeFile.name}</p>
+                    : <p className="text-sm text-muted-foreground">Click to upload PDF or DOC (max 5MB)</p>
+                  }
+                </div>
+                <input type="file" accept=".pdf,.doc,.docx" className="hidden" onChange={e => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  if (file.size > 5 * 1024 * 1024) { toast({ title: "File too large. Max 5MB.", variant: "destructive" }); return; }
+                  setResumeFile(file);
+                  const reader = new FileReader();
+                  reader.onload = ev => setResumeBase64(ev.target?.result as string);
+                  reader.readAsDataURL(file);
+                }} />
+              </label>
+            </div>
+
+            {/* Cover letter — optional */}
+            <div>
+              <Label className="flex items-center gap-1">
+                Cover Letter <span className="text-muted-foreground text-xs">(optional)</span>
+              </Label>
+              <Textarea placeholder="Write a brief cover letter for the referrer to share with the hiring team..." rows={3}
+                value={coverLetter} onChange={e => setCoverLetter(e.target.value)} className="mt-1.5" />
+            </div>
+
             {/* Role cost table */}
             <div className="border rounded-lg overflow-hidden text-xs">
               <div className="bg-muted/50 px-3 py-1.5 font-medium">Chakri Coin Cost by Role</div>
@@ -544,13 +584,13 @@ export default function Referrals() {
                 ))}
               </div>
             </div>
+          </div>
 
-            <div className="flex gap-2 justify-end">
-              <Button variant="outline" onClick={() => setShowNewDialog(false)}>Cancel</Button>
-              <Button onClick={handleCreate} disabled={profile.points < estimatedCost && form.position.length > 0}>
-                <Send className="h-4 w-4 mr-2" />Post ({estimatedCost} coins)
-              </Button>
-            </div>
+          <div className="flex gap-2 justify-end pt-3 border-t mt-2">
+            <Button variant="outline" onClick={() => setShowNewDialog(false)}>Cancel</Button>
+            <Button onClick={handleCreate} disabled={profile.points < estimatedCost && form.position.length > 0}>
+              <Send className="h-4 w-4 mr-2" />Post ({estimatedCost} coins)
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
