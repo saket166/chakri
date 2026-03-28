@@ -20,6 +20,7 @@ import SearchPage from "@/pages/search";
 import Terms from "@/pages/terms";
 import Privacy from "@/pages/privacy";
 import Contact from "@/pages/contact";
+import Notifications from "@/pages/notifications";
 import NotFound from "@/pages/not-found";
 import { useState } from "react";
 import { isLoggedIn } from "@/lib/api";
@@ -52,7 +53,8 @@ function AppLayout() {
               <Route path="/messages"    component={Messages} />
               <Route path="/settings"    component={SettingsPage} />
               <Route path="/search"      component={SearchPage} />
-              <Route path="/terms"       component={Terms} />
+              <Route path="/notifications" component={Notifications} />
+              <Route path="/terms"         component={Terms} />
               <Route path="/privacy"     component={Privacy} />
               <Route path="/contact"     component={Contact} />
               <Route component={NotFound} />

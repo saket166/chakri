@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Home, Users, Briefcase, User, Award, ShoppingBag, LogOut, MessageCircle, Settings, HelpCircle, FileText, Shield, ChevronUp, Search } from "lucide-react";
+import { Home, Users, Briefcase, User, Award, ShoppingBag, LogOut, MessageCircle, Settings, HelpCircle, FileText, Shield, ChevronUp, Search, Bell } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -8,20 +8,29 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { api, clearSession, getCachedUser } from "@/lib/api";
 
 const menuItems = [
-  { title: "Home",            url: "/home",        icon: Home },
-  { title: "Search People",   url: "/search",      icon: Search },
-  { title: "Referral Center", url: "/referrals",   icon: Briefcase },
-  { title: "Connections",     url: "/connections",  icon: Users },
-  { title: "Messages",        url: "/messages",     icon: MessageCircle },
-  { title: "Marketplace",     url: "/marketplace",  icon: ShoppingBag },
-  { title: "Profile",         url: "/profile",      icon: User },
+  { title: "Home",            url: "/home",          icon: Home },
+  { title: "Search People",   url: "/search",        icon: Search },
+  { title: "Notifications",   url: "/notifications", icon: Bell, badge: "notifications" },
+  { title: "Referral Center", url: "/referrals",     icon: Briefcase },
+  { title: "Connections",     url: "/connections",   icon: Users },
+  { title: "Messages",        url: "/messages",      icon: MessageCircle, badge: "messages" },
+  { title: "Marketplace",     url: "/marketplace",   icon: ShoppingBag },
+  { title: "Profile",         url: "/profile",       icon: User },
 ];
 
 export function AppSidebar({ onLogout }: { onLogout?: () => void }) {
   const [location, setLocation] = useLocation();
   const [user, setUser] = useState<any>(getCachedUser() || {});
+  const [notifCount, setNotifCount] = useState(0);
 
-  useEffect(() => { api.auth.me().then(setUser).catch(() => {}); }, []);
+  useEffect(() => {
+    api.auth.me().then(setUser).catch(() => {});
+    // Poll notification count every 30 seconds
+    const fetchCount = () => api.notifications.unreadCount().then(r => setNotifCount(r.count)).catch(() => {});
+    fetchCount();
+    const t = setInterval(fetchCount, 30000);
+    return () => clearInterval(t);
+  }, []);
 
   const handleLogout = () => { clearSession(); onLogout?.(); setLocation("/"); };
 
@@ -49,6 +58,9 @@ export function AppSidebar({ onLogout }: { onLogout?: () => void }) {
                     <Link href={item.url} className="flex items-center gap-2 w-full">
                       <item.icon className="h-4 w-4 shrink-0" />
                       <span className="flex-1">{item.title}</span>
+                      {item.badge === "notifications" && notifCount > 0 && (
+                        <Badge className="h-4 px-1 text-xs bg-red-500 text-white">{notifCount}</Badge>
+                      )}
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

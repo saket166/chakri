@@ -1,15 +1,13 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { db } from "./db";
-import { users, referralRequests, feedItems, recommendations, directMessages, chatMessages } from "@shared/schema";
+import { users, referralRequests, feedItems, recommendations, directMessages, chatMessages, notifications } from "@shared/schema";
 import { eq, and, or, ilike, desc, sql } from "drizzle-orm";
 import { registerAuthRoutes } from "./auth";
 
 function getUser(req: Request): string | null {
   return (req.headers["x-user-id"] as string) || null;
 }
-
-const ROLE_COSTS = [
   { keywords: ["intern","fresher","trainee","graduate"],        cost: 100 },
   { keywords: ["junior","sde-1","sde1","analyst"],              cost: 200 },
   { keywords: ["senior","sde-2","sde2","lead","specialist"],    cost: 400 },
@@ -26,6 +24,11 @@ function costForRole(position: string): number {
     if (tier.keywords.some(k => lower.includes(k))) return tier.cost;
   }
   return 300;
+}
+
+// Simple auth middleware — reads userId from header set by frontend
+function getUser(req: Request): string | null {
+  return (req.headers["x-user-id"] as string) || null;
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -74,6 +77,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const conns: string[] = (me.permanentConnections as string[]) || [];
     if (!conns.includes(toId)) {
       await db.update(users).set({ permanentConnections: [...conns, toId] }).where(eq(users.id, userId));
+      // Notify the person being connected with
+      const [target] = await db.select({ name: users.name }).from(users).where(eq(users.id, toId)).limit(1);
+      if (target) {
+        await db.insert(notifications).values({
+          userId: toId,
+          type: "connection_request",
+          title: "New connection request",
+          body: `${me.name} connected with you on Chakri.`,
+          linkUrl: "/connections",
+        });
+      }
     }
     return res.json({ ok: true });
   });
@@ -185,6 +199,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!updated) return res.status(400).json({ error: "Request not available" });
 
     await db.insert(feedItems).values({ type: "referral_accepted" as any, text: `${me.name} is helping someone get a referral at ${updated.targetCompany}.` });
+
+    // Notify the requester their request was accepted
+    await db.insert(notifications).values({
+      userId: updated.requesterId,
+      type: "referral_accepted",
+      title: "Your referral request was accepted! 🎉",
+      body: `${me.name} accepted your referral request for ${updated.position} at ${updated.targetCompany}. They have 24 hours to refer you.`,
+      linkUrl: "/referrals",
+    });
+
     return res.json(updated);
   });
 
@@ -195,6 +219,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const [updated] = await db.update(referralRequests).set({
       status: "referee_confirmed", screenshotNote: req.body.note || "",
     }).where(and(eq(referralRequests.id, req.params.id), eq(referralRequests.acceptedById, userId))).returning();
+
+    // Notify requester that referee has submitted the referral
+    if (updated) {
+      await db.insert(notifications).values({
+        userId: updated.requesterId,
+        type: "referral_confirmed",
+        title: "You've been referred! ✅",
+        body: `${updated.acceptedByName} has submitted your referral for ${updated.position} at ${updated.targetCompany}. Please confirm once you receive it.`,
+        linkUrl: "/referrals",
+      });
+    }
+
     return res.json(updated);
   });
 
@@ -320,6 +356,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       requestId: req.params.requestId, senderId: userId, senderName: me.name, text: req.body.text,
     }).returning();
     return res.json(msg);
+  });
+
+  // ── Notifications ──────────────────────────────────────────────────────────
+
+  app.get("/api/notifications", async (req: Request, res: Response) => {
+    const userId = getUser(req);
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
+    const items = await db.select().from(notifications)
+      .where(eq(notifications.userId, userId))
+      .orderBy(desc(notifications.createdAt))
+      .limit(30);
+    return res.json(items);
+  });
+
+  app.get("/api/notifications/unread-count", async (req: Request, res: Response) => {
+    const userId = getUser(req);
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
+    const items = await db.select().from(notifications)
+      .where(and(eq(notifications.userId, userId), eq(notifications.read, false)));
+    return res.json({ count: items.length });
+  });
+
+  app.post("/api/notifications/mark-read", async (req: Request, res: Response) => {
+    const userId = getUser(req);
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
+    await db.update(notifications).set({ read: true }).where(eq(notifications.userId, userId));
+    return res.json({ ok: true });
   });
 
   const httpServer = createServer(app);
