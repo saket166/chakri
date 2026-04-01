@@ -107,3 +107,16 @@ export type ChatMessage = typeof chatMessages.$inferSelect;
 export type Notification = typeof notifications.$inferSelect;
 
 export const insertUserSchema = createInsertSchema(users).pick({ email: true, name: true });
+
+export const connectionRequests = pgTable("connection_requests", {
+  id:         uuid("id").primaryKey().defaultRandom(),
+  fromId:     uuid("from_id").notNull().references(() => users.id),
+  fromName:   text("from_name").notNull(),
+  fromHeadline: text("from_headline").default(""),
+  fromCompany:  text("from_company").default(""),
+  toId:       uuid("to_id").notNull().references(() => users.id),
+  status:     text("status").notNull().default("pending"), // pending | accepted | rejected
+  createdAt:  timestamp("created_at").defaultNow(),
+});
+
+export type ConnectionRequest = typeof connectionRequests.$inferSelect;

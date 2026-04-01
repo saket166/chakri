@@ -1,8 +1,8 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { db } from "./db";
-import { users, referralRequests, feedItems, recommendations, directMessages, chatMessages, notifications } from "@shared/schema";
-import { eq, and, or, ilike, desc, sql, inArray } from "drizzle-orm";
+import { users, referralRequests, feedItems, recommendations, directMessages, chatMessages, notifications, connectionRequests } from "@shared/schema";
+import { eq, and, or, ilike, desc, sql, inArray, ne } from "drizzle-orm";
 import { registerAuthRoutes } from "./auth";
 
 function getUser(req: Request): string | null {
@@ -53,35 +53,121 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.get("/api/users/search", async (req: Request, res: Response) => {
+    const userId = getUser(req);
     const q = (req.query.q as string || "").trim();
     if (q.length < 2) return res.json([]);
     const results = await db.select({
       id: users.id, name: users.name, headline: users.headline,
       company: users.company, location: users.location, avatarUrl: users.avatarUrl,
     }).from(users).where(
-      or(ilike(users.name, `%${q}%`), ilike(users.company, `%${q}%`), ilike(users.headline, `%${q}%`))
+      and(
+        or(ilike(users.name, `%${q}%`), ilike(users.company, `%${q}%`), ilike(users.headline, `%${q}%`)),
+        userId ? sql`${users.id} != ${userId}` : sql`true`
+      )
     ).limit(20);
     return res.json(results);
   });
 
-  app.post("/api/users/connect", async (req: Request, res: Response) => {
+  // ── Connection Requests (friend request flow) ──────────────────────────────
+
+  // Send a connection request
+  app.post("/api/users/connect-request", async (req: Request, res: Response) => {
     const userId = getUser(req);
     if (!userId) return res.status(401).json({ error: "Unauthorized" });
     const { toId } = req.body;
     const [me] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
     if (!me) return res.status(404).json({ error: "User not found" });
+
+    // Check if already connected
     const conns: string[] = (me.permanentConnections as string[]) || [];
-    if (!conns.includes(toId)) {
-      await db.update(users).set({ permanentConnections: [...conns, toId] }).where(eq(users.id, userId));
-      // Notify the other person
-      await db.insert(notifications).values({
-        userId: toId, type: "connection_request",
-        title: "New connection on Chakri",
-        body: `${me.name} connected with you on Chakri.`,
-        linkUrl: "/connections",
-      }).catch(() => {}); // don't fail if notifications table has issue
-    }
+    if (conns.includes(toId)) return res.status(400).json({ error: "Already connected" });
+
+    // Check if request already exists
+    const existing = await db.select().from(connectionRequests).where(
+      and(eq(connectionRequests.fromId, userId), eq(connectionRequests.toId, toId), eq(connectionRequests.status, "pending"))
+    ).limit(1);
+    if (existing.length > 0) return res.status(400).json({ error: "Request already sent" });
+
+    const [cr] = await db.insert(connectionRequests).values({
+      fromId: userId, fromName: me.name,
+      fromHeadline: me.headline || "", fromCompany: me.company || "",
+      toId, status: "pending",
+    }).returning();
+
+    // Notify recipient
+    await db.insert(notifications).values({
+      userId: toId, type: "connection_request",
+      title: "New connection request",
+      body: `${me.name} wants to connect with you on Chakri.`,
+      linkUrl: "/connections",
+    }).catch(() => {});
+
+    return res.json(cr);
+  });
+
+  // Accept a connection request
+  app.post("/api/users/connect-accept", async (req: Request, res: Response) => {
+    const userId = getUser(req);
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
+    const { requestId } = req.body;
+
+    const [cr] = await db.select().from(connectionRequests)
+      .where(and(eq(connectionRequests.id, requestId), eq(connectionRequests.toId, userId))).limit(1);
+    if (!cr) return res.status(404).json({ error: "Request not found" });
+
+    await db.update(connectionRequests).set({ status: "accepted" }).where(eq(connectionRequests.id, requestId));
+
+    // Add to both users' permanent connections
+    const [me] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+    const [them] = await db.select().from(users).where(eq(users.id, cr.fromId)).limit(1);
+
+    const myConns: string[] = (me.permanentConnections as string[]) || [];
+    const theirConns: string[] = (them.permanentConnections as string[]) || [];
+
+    if (!myConns.includes(cr.fromId))
+      await db.update(users).set({ permanentConnections: [...myConns, cr.fromId] }).where(eq(users.id, userId));
+    if (!theirConns.includes(userId))
+      await db.update(users).set({ permanentConnections: [...theirConns, userId] }).where(eq(users.id, cr.fromId));
+
+    // Notify sender their request was accepted
+    await db.insert(notifications).values({
+      userId: cr.fromId, type: "connection_request",
+      title: "Connection request accepted! 🎉",
+      body: `${me.name} accepted your connection request.`,
+      linkUrl: "/connections",
+    }).catch(() => {});
+
     return res.json({ ok: true });
+  });
+
+  // Reject a connection request
+  app.post("/api/users/connect-reject", async (req: Request, res: Response) => {
+    const userId = getUser(req);
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
+    const { requestId } = req.body;
+    await db.update(connectionRequests).set({ status: "rejected" })
+      .where(and(eq(connectionRequests.id, requestId), eq(connectionRequests.toId, userId)));
+    return res.json({ ok: true });
+  });
+
+  // Get pending requests sent TO me
+  app.get("/api/users/connect-requests", async (req: Request, res: Response) => {
+    const userId = getUser(req);
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
+    const reqs = await db.select().from(connectionRequests)
+      .where(and(eq(connectionRequests.toId, userId), eq(connectionRequests.status, "pending")))
+      .orderBy(desc(connectionRequests.createdAt));
+    return res.json(reqs);
+  });
+
+  // Get requests I sent (to show "Request Sent" in search)
+  app.get("/api/users/connect-sent", async (req: Request, res: Response) => {
+    const userId = getUser(req);
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
+    const reqs = await db.select({ toId: connectionRequests.toId })
+      .from(connectionRequests)
+      .where(and(eq(connectionRequests.fromId, userId), eq(connectionRequests.status, "pending")));
+    return res.json(reqs.map(r => r.toId));
   });
 
   app.get("/api/users/connections", async (req: Request, res: Response) => {
@@ -91,7 +177,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!me) return res.json([]);
     const ids: string[] = (me.permanentConnections as string[]) || [];
     if (ids.length === 0) return res.json([]);
-    // ✅ FIXED: use inArray instead of sql`ANY` to avoid malformed array literal error
     const conns = await db.select({
       id: users.id, name: users.name, headline: users.headline,
       company: users.company, avatarUrl: users.avatarUrl,
@@ -127,25 +212,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return res.json(req2);
   });
 
+  // Get requests: my own requests + open requests at MY company (for referring others)
   app.get("/api/requests", async (req: Request, res: Response) => {
     const userId = getUser(req);
     if (!userId) return res.status(401).json({ error: "Unauthorized" });
     const [me] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
     if (!me) return res.json([]);
-    const mine = await db.select().from(referralRequests).where(eq(referralRequests.requesterId, userId));
+
+    // My own requests (only I can see these)
+    const mine = await db.select().from(referralRequests)
+      .where(eq(referralRequests.requesterId, userId));
+
+    // Open requests at MY company — people I can refer (excluding my own)
     let incoming: typeof mine = [];
     if (me.company) {
       incoming = await db.select().from(referralRequests).where(
-        and(ilike(referralRequests.targetCompany, me.company), eq(referralRequests.status, "open"), sql`requester_id != ${userId}`)
+        and(
+          ilike(referralRequests.targetCompany, me.company),
+          eq(referralRequests.status, "open"),
+          ne(referralRequests.requesterId, userId)
+        )
       );
     }
+
+    // Requests I've accepted to refer
     const accepted = await db.select().from(referralRequests).where(
       and(eq(referralRequests.acceptedById, userId), sql`status IN ('accepted','referee_confirmed')`)
     );
+
     const all = [...mine, ...incoming, ...accepted].reduce((acc, r) => {
       if (!acc.find((x: any) => x.id === r.id)) acc.push(r);
       return acc;
     }, [] as typeof mine);
+
     return res.json(all);
   });
 
@@ -165,7 +264,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }).where(and(eq(referralRequests.id, req.params.id), eq(referralRequests.status, "open"))).returning();
     if (!updated) return res.status(400).json({ error: "Request not available" });
     await db.insert(feedItems).values({ type: "referral_accepted" as any, text: `${me.name} is helping someone get a referral at ${updated.targetCompany}.` });
-    // Notify requester
     await db.insert(notifications).values({
       userId: updated.requesterId, type: "referral_accepted",
       title: "Your referral request was accepted! 🎉",
@@ -185,7 +283,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await db.insert(notifications).values({
         userId: updated.requesterId, type: "referral_confirmed",
         title: "You've been referred! ✅",
-        body: `${updated.acceptedByName} submitted your referral for ${updated.position} at ${updated.targetCompany}. Please confirm once you receive it.`,
+        body: `${updated.acceptedByName} submitted your referral for ${updated.position} at ${updated.targetCompany}.`,
         linkUrl: "/referrals",
       }).catch(() => {});
     }
@@ -266,6 +364,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       or(and(eq(directMessages.fromId, userId), eq(directMessages.toId, req.params.withId)),
          and(eq(directMessages.fromId, req.params.withId), eq(directMessages.toId, userId)))
     ).orderBy(directMessages.createdAt);
+    // Mark as read
+    await db.update(directMessages).set({ read: true })
+      .where(and(eq(directMessages.toId, userId), eq(directMessages.fromId, req.params.withId)));
     return res.json(msgs);
   });
 
@@ -314,8 +415,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!userId) return res.status(401).json({ error: "Unauthorized" });
     const items = await db.select().from(notifications)
       .where(eq(notifications.userId, userId))
-      .orderBy(desc(notifications.createdAt))
-      .limit(30);
+      .orderBy(desc(notifications.createdAt)).limit(30);
     return res.json(items);
   });
 

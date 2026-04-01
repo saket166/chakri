@@ -152,17 +152,20 @@ export default function Profile() {
       </Card>
 
       <Tabs defaultValue="experience">
-        <TabsList className="mb-4 grid grid-cols-5 w-full">
+        <TabsList className="mb-4 grid grid-cols-4 w-full">
           <TabsTrigger value="experience"><Briefcase className="h-3.5 w-3.5 mr-1 hidden sm:inline" />Experience</TabsTrigger>
           <TabsTrigger value="education"><GraduationCap className="h-3.5 w-3.5 mr-1 hidden sm:inline" />Education</TabsTrigger>
           <TabsTrigger value="skills">Skills</TabsTrigger>
           <TabsTrigger value="certifications"><FileText className="h-3.5 w-3.5 mr-1 hidden sm:inline" />Certs</TabsTrigger>
-          <TabsTrigger value="recommendations"><ThumbsUp className="h-3.5 w-3.5 mr-1 hidden sm:inline" />Reviews</TabsTrigger>
         </TabsList>
 
         {/* Experience */}
         <TabsContent value="experience" className="space-y-3">
-          {isEditing && <Button size="sm" onClick={addWork}><Plus className="h-3.5 w-3.5 mr-1" />Add Experience</Button>}
+          <div className="flex gap-2">
+            {!isEditing && <Button size="sm" variant="outline" onClick={() => { setDraft(profile); setIsEditing(true); }}><Edit className="h-3.5 w-3.5 mr-1" />Edit</Button>}
+            {isEditing && <Button size="sm" onClick={addWork}><Plus className="h-3.5 w-3.5 mr-1" />Add Experience</Button>}
+            {isEditing && <Button size="sm" variant="outline" onClick={save}><Save className="h-3.5 w-3.5 mr-1" />Save</Button>}
+          </div>
           {(isEditing ? draft.workHistory : profile.workHistory || [])?.map((w: any, i: number) => (
             <Card key={i}><CardContent className="p-4">
               {isEditing ? (
@@ -188,7 +191,11 @@ export default function Profile() {
 
         {/* Education */}
         <TabsContent value="education" className="space-y-3">
-          {isEditing && <Button size="sm" onClick={addEdu}><Plus className="h-3.5 w-3.5 mr-1" />Add Education</Button>}
+          <div className="flex gap-2">
+            {!isEditing && <Button size="sm" variant="outline" onClick={() => { setDraft(profile); setIsEditing(true); }}><Edit className="h-3.5 w-3.5 mr-1" />Edit</Button>}
+            {isEditing && <Button size="sm" onClick={addEdu}><Plus className="h-3.5 w-3.5 mr-1" />Add Education</Button>}
+            {isEditing && <Button size="sm" variant="outline" onClick={save}><Save className="h-3.5 w-3.5 mr-1" />Save</Button>}
+          </div>
           {(isEditing ? draft.education : profile.education || [])?.map((e: any, i: number) => (
             <Card key={i}><CardContent className="p-4">
               {isEditing ? (
@@ -231,7 +238,11 @@ export default function Profile() {
 
         {/* Certifications */}
         <TabsContent value="certifications" className="space-y-3">
-          {isEditing && <Button size="sm" onClick={addCert}><Plus className="h-3.5 w-3.5 mr-1" />Add Certification</Button>}
+          <div className="flex gap-2">
+            {!isEditing && <Button size="sm" variant="outline" onClick={() => { setDraft(profile); setIsEditing(true); }}><Edit className="h-3.5 w-3.5 mr-1" />Edit</Button>}
+            {isEditing && <Button size="sm" onClick={addCert}><Plus className="h-3.5 w-3.5 mr-1" />Add Certification</Button>}
+            {isEditing && <Button size="sm" variant="outline" onClick={save}><Save className="h-3.5 w-3.5 mr-1" />Save</Button>}
+          </div>
           {(isEditing ? draft.certifications : profile.certifications || [])?.map((c: any, i: number) => (
             <Card key={i}><CardContent className="p-4">
               {isEditing ? (

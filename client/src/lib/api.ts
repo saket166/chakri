@@ -41,7 +41,11 @@ export const api = {
   },
   users: {
     search: (q: string) => get<any[]>(`/users/search?q=${encodeURIComponent(q)}`),
-    connect: (toId: string) => post<any>("/users/connect", { toId }),
+    sendConnectRequest: (toId: string) => post<any>("/users/connect-request", { toId }),
+    acceptConnectRequest: (requestId: string) => post<any>("/users/connect-accept", { requestId }),
+    rejectConnectRequest: (requestId: string) => post<any>("/users/connect-reject", { requestId }),
+    connectRequests: () => get<any[]>("/users/connect-requests"),
+    connectSent: () => get<string[]>("/users/connect-sent"),
     connections: () => get<any[]>("/users/connections"),
     recommendations: (userId: string) => get<any[]>(`/recommendations/${userId}`),
   },

@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Search, Building2, MessageCircle, UserPlus, CheckCircle } from "lucide-react";
+import { Search, Building2, MessageCircle, UserPlus, CheckCircle, Clock } from "lucide-react";
 import { api, getCachedUser } from "@/lib/api";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -13,25 +13,31 @@ export default function SearchPage() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<any[]>([]);
   const [connections, setConnections] = useState<string[]>([]);
+  const [sentRequests, setSentRequests] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const me = getCachedUser();
 
   useEffect(() => {
-    api.users.connections().then(c => setConnections(c.map((u: any) => u.id)));
+    api.users.connections().then(c => setConnections(c.map((u: any) => u.id))).catch(() => {});
+    api.users.connectSent().then(setSentRequests).catch(() => {});
   }, []);
 
   useEffect(() => {
     if (query.trim().length < 2) { setResults([]); return; }
     setLoading(true);
-    api.users.search(query).then(r => setResults(r.filter((u: any) => u.id !== me?.id))).finally(() => setLoading(false));
+    api.users.search(query).then(setResults).catch(() => setResults([])).finally(() => setLoading(false));
   }, [query]);
 
-  const handleConnect = async (u: any) => {
-    await api.users.connect(u.id);
-    setConnections(prev => [...prev, u.id]);
-    toast({ title: `Connected with ${u.name}!` });
+  const handleSendRequest = async (u: any) => {
+    try {
+      await api.users.sendConnectRequest(u.id);
+      setSentRequests(prev => [...prev, u.id]);
+      toast({ title: `Connection request sent to ${u.name}!` });
+    } catch (e: any) {
+      toast({ title: e.message || "Failed to send request", variant: "destructive" });
+    }
   };
 
   return (
@@ -42,7 +48,8 @@ export default function SearchPage() {
       </div>
       <div className="relative mb-6">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-        <Input className="pl-11 h-12 text-base" placeholder="Search by name, company, or role..." value={query} autoFocus onChange={e => setQuery(e.target.value)} />
+        <Input className="pl-11 h-12 text-base" placeholder="Search by name, company, or role..."
+          value={query} autoFocus onChange={e => setQuery(e.target.value)} />
       </div>
       {loading && <p className="text-sm text-muted-foreground text-center py-4">Searching...</p>}
       {!loading && query.trim().length >= 2 && results.length === 0 && (
@@ -54,7 +61,8 @@ export default function SearchPage() {
       <div className="space-y-3">
         {results.map(u => {
           const isConnected = connections.includes(u.id);
-          const initials = u.name.split(" ").map((n: string) => n[0]).join("").slice(0,2).toUpperCase();
+          const requestSent = sentRequests.includes(u.id);
+          const initials = (u.name || "?").split(" ").map((n: string) => n[0]).join("").slice(0,2).toUpperCase();
           return (
             <Card key={u.id} className="hover:shadow-md transition-all">
               <CardContent className="p-4 flex items-center gap-4">
@@ -65,15 +73,23 @@ export default function SearchPage() {
                   <p className="font-semibold">{u.name}</p>
                   {u.headline && <p className="text-sm text-muted-foreground truncate">{u.headline}</p>}
                   {u.company && <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5"><Building2 className="h-3 w-3" />{u.company}</p>}
-                  {isConnected && <Badge variant="secondary" className="text-xs mt-1">Connected</Badge>}
                 </div>
                 <div className="flex gap-2 shrink-0">
                   {isConnected ? (
-                    <Button size="sm" variant="outline" onClick={() => setLocation("/messages")}>
-                      <MessageCircle className="h-3.5 w-3.5 mr-1" />Message
-                    </Button>
+                    <>
+                      <Badge variant="secondary" className="flex items-center gap-1">
+                        <CheckCircle className="h-3 w-3 text-green-500" />Connected
+                      </Badge>
+                      <Button size="sm" variant="outline" onClick={() => setLocation("/messages")}>
+                        <MessageCircle className="h-3.5 w-3.5 mr-1" />Message
+                      </Button>
+                    </>
+                  ) : requestSent ? (
+                    <Badge variant="outline" className="flex items-center gap-1 text-muted-foreground">
+                      <Clock className="h-3 w-3" />Request Sent
+                    </Badge>
                   ) : (
-                    <Button size="sm" onClick={() => handleConnect(u)}>
+                    <Button size="sm" onClick={() => handleSendRequest(u)}>
                       <UserPlus className="h-3.5 w-3.5 mr-1" />Connect
                     </Button>
                   )}

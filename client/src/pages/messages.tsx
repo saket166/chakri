@@ -3,61 +3,62 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { MessageCircle, Send, Users } from "lucide-react";
-import { getProfile, getDMs, sendDM, getAllDMThreads, getRequests, type DirectMessage } from "@/lib/userStore";
+import { api, getCachedUser } from "@/lib/api";
 import { formatDistanceToNow } from "date-fns";
+import { useSearch } from "wouter";
 
 export default function Messages() {
-  const profile = getProfile();
-  const [threads, setThreads] = useState(getAllDMThreads());
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [activeName, setActiveName] = useState("");
-  const [messages, setMessages] = useState<DirectMessage[]>([]);
+  const me = getCachedUser();
+  const searchStr = useSearch();
+  const params = new URLSearchParams(searchStr);
+  const preselectId = params.get("to");
+  const preselectName = params.get("name");
+
+  const [connections, setConnections] = useState<any[]>([]);
+  const [activeUser, setActiveUser] = useState<{ id: string; name: string } | null>(null);
+  const [messages, setMessages] = useState<any[]>([]);
+  const [allMessages, setAllMessages] = useState<any[]>([]);
   const [text, setText] = useState("");
+  const [loading, setLoading] = useState(true);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  // Build list of people we can message: permanent connections + active referral partners
-  const reqs = getRequests();
-  const connectedPeople: { id: string; name: string; context: string }[] = [];
-
-  // From permanent connections (stored as IDs — we get names from DM history or referral history)
-  profile.permanentConnections.forEach(pid => {
-    const fromReq = reqs.find(r => r.requesterId === pid || r.acceptedById === pid);
-    const name = fromReq ? (fromReq.requesterId === pid ? fromReq.requesterName : fromReq.acceptedByName || pid) : pid;
-    if (!connectedPeople.find(c => c.id === pid))
-      connectedPeople.push({ id: pid, name, context: "Permanent connection" });
-  });
-
-  // From active referral connections
-  reqs.filter(r => r.connectionActive && (r.requesterId === profile.id || r.acceptedById === profile.id)).forEach(r => {
-    const otherId = r.requesterId === profile.id ? r.acceptedById! : r.requesterId;
-    const otherName = r.requesterId === profile.id ? (r.acceptedByName || "Referee") : r.requesterName;
-    if (!connectedPeople.find(c => c.id === otherId))
-      connectedPeople.push({ id: otherId, name: otherName, context: `Active referral · ${r.targetCompany}` });
-  });
-
   useEffect(() => {
-    const handler = () => setThreads(getAllDMThreads());
-    window.addEventListener("chakri_dm_updated", handler);
-    return () => window.removeEventListener("chakri_dm_updated", handler);
+    Promise.all([
+      api.users.connections().catch(() => []),
+      api.messages.list().catch(() => []),
+    ]).then(([conns, msgs]) => {
+      setConnections(conns);
+      setAllMessages(msgs);
+      // Auto-open thread if navigated from connections page
+      if (preselectId && preselectName) {
+        setActiveUser({ id: preselectId, name: decodeURIComponent(preselectName) });
+      }
+    }).finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
-    if (activeId) setMessages(getDMs(activeId));
+    if (!activeUser) return;
+    api.messages.thread(activeUser.id).then(setMessages).catch(() => setMessages([]));
+  }, [activeUser]);
+
+  useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [activeId, threads]);
+  }, [messages]);
 
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
-
-  const openThread = (id: string, name: string) => { setActiveId(id); setActiveName(name); setMessages(getDMs(id)); };
-
-  const handleSend = () => {
-    if (!text.trim() || !activeId) return;
-    sendDM(activeId, activeName, text.trim());
+  const handleSend = async () => {
+    if (!text.trim() || !activeUser) return;
+    const msg = await api.messages.send(activeUser.id, text.trim());
+    setMessages(prev => [...prev, msg]);
     setText("");
-    setMessages(getDMs(activeId));
-    setThreads(getAllDMThreads());
+    // Update thread list
+    api.messages.list().then(setAllMessages).catch(() => {});
+  };
+
+  // Build thread list — show connections, highlight ones with messages
+  const getLastMsg = (userId: string) => {
+    const msgs = allMessages.filter((m: any) => m.fromId === userId || m.toId === userId);
+    return msgs.length > 0 ? msgs[0] : null;
   };
 
   return (
@@ -68,69 +69,66 @@ export default function Messages() {
       </div>
 
       <div className="grid md:grid-cols-3 gap-4 h-[calc(100vh-220px)]">
-        {/* Sidebar: thread list + connectable people */}
+        {/* Left: connections list */}
         <Card className="md:col-span-1 flex flex-col overflow-hidden">
           <CardHeader className="pb-2 shrink-0">
             <CardTitle className="text-sm text-muted-foreground">Conversations</CardTitle>
           </CardHeader>
           <CardContent className="flex-1 overflow-y-auto p-2 space-y-1">
-            {/* Connected people you can start a convo with */}
-            {connectedPeople.map(p => {
-              const hasThread = threads.find(t => t.userId === p.id);
+            {loading && <p className="text-xs text-center text-muted-foreground py-4">Loading...</p>}
+            {!loading && connections.length === 0 && (
+              <div className="text-center py-8 text-sm text-muted-foreground">
+                <Users className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                <p>No connections yet.</p>
+                <p className="text-xs mt-1">Connect with people first.</p>
+              </div>
+            )}
+            {connections.map(u => {
+              const initials = (u.name || "?").split(" ").map((n: string) => n[0]).join("").slice(0,2).toUpperCase();
+              const lastMsg = getLastMsg(u.id);
+              const isActive = activeUser?.id === u.id;
               return (
-                <button key={p.id} onClick={() => openThread(p.id, p.name)}
-                  className={"w-full flex items-center gap-3 p-2 rounded-lg text-left transition-colors hover:bg-muted/60 " + (activeId === p.id ? "bg-muted" : "")}>
+                <button key={u.id} onClick={() => setActiveUser({ id: u.id, name: u.name })}
+                  className={`w-full flex items-center gap-3 p-2 rounded-lg text-left transition-colors hover:bg-muted/60 ${isActive ? "bg-muted" : ""}`}>
                   <Avatar className="h-9 w-9 shrink-0">
-                    <AvatarFallback className="bg-primary/10 text-primary font-semibold text-xs">
-                      {p.name.split(" ").map(n => n[0]).join("").slice(0,2).toUpperCase()}
-                    </AvatarFallback>
+                    <AvatarFallback className="bg-primary/10 text-primary font-semibold text-xs">{initials}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{p.name}</p>
-                    <p className="text-xs text-muted-foreground truncate">{hasThread ? hasThread.lastMsg.text : p.context}</p>
+                    <p className="text-sm font-medium truncate">{u.name}</p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {lastMsg ? lastMsg.text : u.headline || u.company || "Say hello!"}
+                    </p>
                   </div>
                 </button>
               );
             })}
-            {connectedPeople.length === 0 && threads.length === 0 && (
-              <div className="text-center py-8 text-sm text-muted-foreground">
-                <Users className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                <p>No connections yet.</p>
-                <p className="text-xs mt-1">Complete a referral to unlock messaging.</p>
-              </div>
-            )}
           </CardContent>
         </Card>
 
-        {/* Chat window */}
+        {/* Right: chat window */}
         <Card className="md:col-span-2 flex flex-col overflow-hidden">
-          {activeId ? (
+          {activeUser ? (
             <>
               <CardHeader className="pb-3 shrink-0 border-b">
                 <div className="flex items-center gap-3">
                   <Avatar className="h-9 w-9">
                     <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm">
-                      {activeName.split(" ").map(n => n[0]).join("").slice(0,2).toUpperCase()}
+                      {activeUser.name.split(" ").map((n: string) => n[0]).join("").slice(0,2).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
-                  <div>
-                    <CardTitle className="text-base">{activeName}</CardTitle>
-                    <p className="text-xs text-muted-foreground">
-                      {connectedPeople.find(c => c.id === activeId)?.context || "Connection"}
-                    </p>
-                  </div>
+                  <CardTitle className="text-base">{activeUser.name}</CardTitle>
                 </div>
               </CardHeader>
               <CardContent className="flex-1 overflow-y-auto p-4 space-y-3">
                 {messages.length === 0 && (
                   <p className="text-center text-sm text-muted-foreground pt-8">No messages yet. Say hello! 👋</p>
                 )}
-                {messages.map(m => (
-                  <div key={m.id} className={"flex " + (m.fromId === profile.id ? "justify-end" : "justify-start")}>
-                    <div className={"max-w-[75%] px-4 py-2 rounded-2xl text-sm " + (m.fromId === profile.id ? "bg-primary text-primary-foreground" : "bg-muted")}>
+                {messages.map((m: any) => (
+                  <div key={m.id} className={`flex ${m.fromId === me?.id ? "justify-end" : "justify-start"}`}>
+                    <div className={`max-w-[75%] px-4 py-2 rounded-2xl text-sm ${m.fromId === me?.id ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
                       <p>{m.text}</p>
-                      <p className={"text-xs mt-1 " + (m.fromId === profile.id ? "text-primary-foreground/70" : "text-muted-foreground")}>
-                        {formatDistanceToNow(new Date(m.sentAt), { addSuffix: true })}
+                      <p className={`text-xs mt-1 ${m.fromId === me?.id ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+                        {formatDistanceToNow(new Date(m.createdAt), { addSuffix: true })}
                       </p>
                     </div>
                   </div>
