@@ -7,28 +7,47 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-  Plus, Clock, Building2, MapPin, CheckCircle, AlertTriangle, Send,
-  User, Briefcase, Ban, Search, Zap, MessageCircle, Star, Award,
-  Upload, ThumbsUp, Link2, Link2Off, ArrowUp, Info
+  Plus, Clock, Building2, MapPin, CheckCircle, Send,
+  User, Briefcase, Search, MessageCircle, Star, Award,
+  Upload, ThumbsUp, Link2, ArrowUp, Info, Loader2
 } from "lucide-react";
-import {
-  getProfile, getRequests, createRequest, acceptRequest, refereeConfirm,
-  requesterConfirm, boostRequest, submitRating, sendPermanentConnection,
-  processExpiredRequests, isBanned, getChats, sendChat,
-  costForRole, labelForRole, ROLE_TIERS, MAX_ACTIVE_ACCEPTS,
-  type ReferralRequest, type Rating,
-} from "@/lib/userStore";
+import { api, getCachedUser } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
-import { formatDistanceToNow, formatDistanceToNowStrict } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
+
+const ROLE_TIERS = [
+  { label: "Intern / Fresher",        cost: 100 },
+  { label: "Junior / SDE-1",          cost: 200 },
+  { label: "Senior / SDE-2 / Lead",   cost: 400 },
+  { label: "Staff / Principal",        cost: 700 },
+  { label: "Manager / EM",            cost: 1000 },
+  { label: "Senior Manager",          cost: 1500 },
+  { label: "Director",                cost: 2500 },
+  { label: "VP / SVP",                cost: 4000 },
+  { label: "CXO / Partner",           cost: 6000 },
+];
+
+function costForRole(position: string): number {
+  const lower = position.toLowerCase();
+  if (["intern","fresher","trainee","graduate"].some(k => lower.includes(k))) return 100;
+  if (["junior","sde-1","sde1","analyst"].some(k => lower.includes(k))) return 200;
+  if (["senior","sde-2","sde2","lead","specialist"].some(k => lower.includes(k))) return 400;
+  if (["staff","principal","architect","sde-3","sde3"].some(k => lower.includes(k))) return 700;
+  if (["manager","engineering manager"].some(k => lower.includes(k))) return 1000;
+  if (["senior manager","sr. manager"].some(k => lower.includes(k))) return 1500;
+  if (["director"].some(k => lower.includes(k))) return 2500;
+  if (["vp","svp","vice president"].some(k => lower.includes(k))) return 4000;
+  if (["ceo","cto","coo","cfo","chief","partner"].some(k => lower.includes(k))) return 6000;
+  return 300;
+}
 
 // ─── Countdown ────────────────────────────────────────────────────────────────
-function TimeCountdown({ deadlineAt }: { deadlineAt: number }) {
+function TimeCountdown({ deadlineAt }: { deadlineAt: string }) {
   const [left, setLeft] = useState("");
   useEffect(() => {
     const tick = () => {
-      const ms = deadlineAt - Date.now();
+      const ms = new Date(deadlineAt).getTime() - Date.now();
       if (ms <= 0) { setLeft("Expired"); return; }
       const h = Math.floor(ms / 3600000);
       const m = Math.floor((ms % 3600000) / 60000);
@@ -37,7 +56,7 @@ function TimeCountdown({ deadlineAt }: { deadlineAt: number }) {
     };
     tick(); const t = setInterval(tick, 1000); return () => clearInterval(t);
   }, [deadlineAt]);
-  const urgent = deadlineAt - Date.now() < 2 * 3600000;
+  const urgent = new Date(deadlineAt).getTime() - Date.now() < 2 * 3600000;
   return (
     <Badge variant="outline" className={urgent ? "border-red-400 text-red-600 animate-pulse" : "border-amber-400 text-amber-700"}>
       <Clock className="h-3 w-3 mr-1" />{left}
@@ -45,51 +64,37 @@ function TimeCountdown({ deadlineAt }: { deadlineAt: number }) {
   );
 }
 
-// ─── Star Rating Input ────────────────────────────────────────────────────────
-function StarInput({ value, onChange }: { value: number; onChange: (v: number) => void }) {
-  return (
-    <div className="flex gap-1">
-      {[1,2,3,4,5].map(n => (
-        <Star key={n} className={`h-5 w-5 cursor-pointer ${n <= value ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground"}`}
-          onClick={() => onChange(n)} />
-      ))}
-    </div>
-  );
-}
-
 // ─── Temp Chat ────────────────────────────────────────────────────────────────
-function TempChat({ req, currentUserId, currentUserName }: { req: ReferralRequest; currentUserId: string; currentUserName: string }) {
-  const [msgs, setMsgs] = useState(getChats(req.id));
+function TempChat({ requestId, me }: { requestId: string; me: any }) {
+  const [msgs, setMsgs] = useState<any[]>([]);
   const [text, setText] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handler = () => setMsgs(getChats(req.id));
-    window.addEventListener("chakri_chat_" + req.id, handler);
-    return () => window.removeEventListener("chakri_chat_" + req.id, handler);
-  }, [req.id]);
+    api.chat.list(requestId).then(setMsgs).catch(() => {});
+  }, [requestId]);
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs]);
 
-  const send = () => {
+  const send = async () => {
     if (!text.trim()) return;
-    sendChat(req.id, currentUserId, currentUserName, text.trim());
+    const msg = await api.chat.send(requestId, text.trim());
+    setMsgs(prev => [...prev, msg]);
     setText("");
   };
 
   return (
     <div className="border rounded-lg overflow-hidden">
       <div className="bg-muted/50 px-3 py-2 flex items-center gap-2 text-xs font-medium">
-        <MessageCircle className="h-3.5 w-3.5" />
-        Temporary Chat — connection ends when referral completes
+        <MessageCircle className="h-3.5 w-3.5" />Temporary Chat
         <Link2 className="h-3 w-3 text-green-500 ml-auto" />
       </div>
       <div className="h-40 overflow-y-auto p-3 space-y-2 bg-background">
         {msgs.length === 0 && <p className="text-xs text-center text-muted-foreground pt-4">No messages yet. Say hi!</p>}
         {msgs.map(m => (
-          <div key={m.id} className={`flex ${m.senderId === currentUserId ? "justify-end" : "justify-start"}`}>
-            <div className={`max-w-[75%] px-3 py-1.5 rounded-xl text-sm ${m.senderId === currentUserId ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
-              {m.senderId !== currentUserId && <p className="text-xs font-medium mb-0.5 opacity-70">{m.senderName}</p>}
+          <div key={m.id} className={`flex ${m.senderId === me?.id ? "justify-end" : "justify-start"}`}>
+            <div className={`max-w-[75%] px-3 py-1.5 rounded-xl text-sm ${m.senderId === me?.id ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
+              {m.senderId !== me?.id && <p className="text-xs font-medium mb-0.5 opacity-70">{m.senderName}</p>}
               {m.text}
             </div>
           </div>
@@ -105,104 +110,64 @@ function TempChat({ req, currentUserId, currentUserName }: { req: ReferralReques
   );
 }
 
-// ─── Rating Dialog ────────────────────────────────────────────────────────────
-function RatingDialog({ open, onClose, onSubmit, targetName }: {
-  open: boolean; onClose: () => void;
-  onSubmit: (r: { speed: number; communication: number; overall: number; comment: string }) => void;
-  targetName: string;
-}) {
-  const [speed, setSpeed] = useState(5);
-  const [comm, setComm] = useState(5);
-  const [overall, setOverall] = useState(5);
-  const [comment, setComment] = useState("");
-  return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-sm">
-        <DialogHeader>
-          <DialogTitle>Rate your experience with {targetName}</DialogTitle>
-          <DialogDescription>Your feedback helps the community.</DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4 pt-2">
-          {[["Speed of Referral", speed, setSpeed], ["Communication", comm, setComm], ["Overall Experience", overall, setOverall]].map(([label, val, setter]) => (
-            <div key={label as string}>
-              <Label className="text-sm">{label as string}</Label>
-              <StarInput value={val as number} onChange={setter as (v: number) => void} />
-            </div>
-          ))}
-          <div>
-            <Label>Comment (optional)</Label>
-            <Textarea placeholder="Share your experience..." rows={2} value={comment} onChange={e => setComment(e.target.value)} />
-          </div>
-          <div className="flex gap-2 justify-end">
-            <Button variant="outline" onClick={onClose}>Skip</Button>
-            <Button onClick={() => { onSubmit({ speed, communication: comm, overall, comment }); onClose(); }}>
-              <Star className="h-4 w-4 mr-1" />Submit Rating
-            </Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
 // ─── Request Card ─────────────────────────────────────────────────────────────
-function RequestCard({ req, currentUserId, currentUserName, onRefresh }: {
-  req: ReferralRequest; currentUserId: string; currentUserName: string; onRefresh: () => void;
+function RequestCard({ req, me, onRefresh, showAccept }: {
+  req: any; me: any; onRefresh: () => void; showAccept?: boolean;
 }) {
   const { toast } = useToast();
-  const isMyRequest = req.requesterId === currentUserId;
-  const isAcceptedByMe = req.acceptedById === currentUserId;
+  const isMyRequest = req.requesterId === me?.id;
+  const isAcceptedByMe = req.acceptedById === me?.id;
   const showChat = req.connectionActive && (isMyRequest || isAcceptedByMe);
-  const [showConfirmNote, setShowConfirmNote] = useState(false);
+  const [showNote, setShowNote] = useState(false);
   const [note, setNote] = useState("");
-  const [showRating, setShowRating] = useState(false);
-  const [showBoost, setShowBoost] = useState(false);
-  const [boostCoins, setBoostCoins] = useState(100);
-  const profile = getProfile();
+  const [loading, setLoading] = useState(false);
 
-  const statusColors: Record<ReferralRequest["status"], string> = {
-    open:                "bg-blue-100 text-blue-700",
-    accepted:            "bg-amber-100 text-amber-700",
-    referee_confirmed:   "bg-purple-100 text-purple-700",
-    requester_confirmed: "bg-teal-100 text-teal-700",
-    completed:           "bg-green-100 text-green-700",
-    expired:             "bg-red-100 text-red-700",
-    cancelled:           "bg-gray-100 text-gray-600",
+  const statusColors: Record<string, string> = {
+    open: "bg-blue-100 text-blue-700",
+    accepted: "bg-amber-100 text-amber-700",
+    referee_confirmed: "bg-purple-100 text-purple-700",
+    completed: "bg-green-100 text-green-700",
+    expired: "bg-red-100 text-red-700",
   };
-  const statusLabels: Record<ReferralRequest["status"], string> = {
-    open: "Open", accepted: "In Progress", referee_confirmed: "Awaiting Your Confirmation",
-    requester_confirmed: "Confirmed", completed: "Completed ✓", expired: "Expired", cancelled: "Cancelled",
+  const statusLabels: Record<string, string> = {
+    open: "Open", accepted: "In Progress",
+    referee_confirmed: "Awaiting Confirmation",
+    completed: "Completed ✓", expired: "Expired",
   };
 
-  const handleRefereeConfirm = () => {
-    const r = refereeConfirm(req.id, note);
-    if (r.ok) { toast({ title: "Submitted! Waiting for requester to confirm." }); setShowConfirmNote(false); onRefresh(); }
-    else toast({ title: r.msg, variant: "destructive" });
+  const handleAccept = async () => {
+    setLoading(true);
+    try {
+      await api.requests.accept(req.id);
+      toast({ title: "Accepted! ✅", description: "You have 24 hours to complete the referral." });
+      onRefresh();
+    } catch (e: any) { toast({ title: e.message, variant: "destructive" }); }
+    finally { setLoading(false); }
   };
 
-  const handleRequesterConfirm = () => {
-    const r = requesterConfirm(req.id);
-    if (r.ok) { toast({ title: "🎉 " + r.msg }); setShowRating(true); onRefresh(); }
-    else toast({ title: r.msg, variant: "destructive" });
+  const handleRefereeConfirm = async () => {
+    setLoading(true);
+    try {
+      await api.requests.refereeConfirm(req.id, note);
+      toast({ title: "Submitted! Waiting for requester to confirm." });
+      setShowNote(false); onRefresh();
+    } catch (e: any) { toast({ title: e.message, variant: "destructive" }); }
+    finally { setLoading(false); }
   };
 
-  const handleBoost = () => {
-    const r = boostRequest(req.id, boostCoins);
-    toast({ title: r.ok ? "🚀 " + r.msg : r.msg, variant: r.ok ? "default" : "destructive" });
-    setShowBoost(false); onRefresh();
-  };
-
-  const handlePermanentConnect = () => {
-    const otherName = isMyRequest ? req.acceptedByName! : req.requesterName;
-    const otherId = isMyRequest ? req.acceptedById! : req.requesterId;
-    sendPermanentConnection(otherId, otherName);
-    toast({ title: `Connected with ${otherName}!`, description: "Permanent connection added." });
+  const handleRequesterConfirm = async () => {
+    setLoading(true);
+    try {
+      await api.requests.requesterConfirm(req.id);
+      toast({ title: "🎉 Referral confirmed!" });
+      onRefresh();
+    } catch (e: any) { toast({ title: e.message, variant: "destructive" }); }
+    finally { setLoading(false); }
   };
 
   return (
     <Card className="hover:shadow-md transition-all">
       <CardContent className="p-4 space-y-3">
-        {/* Header row */}
         <div className="flex items-start gap-3 flex-wrap">
           <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
             <Building2 className="h-5 w-5 text-primary" />
@@ -210,15 +175,14 @@ function RequestCard({ req, currentUserId, currentUserName, onRefresh }: {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <h3 className="font-semibold">{req.position}</h3>
-              <Badge className={statusColors[req.status]}>{statusLabels[req.status]}</Badge>
-              {req.queuePosition > 1 && req.status === "open" && (
-                <Badge variant="outline" className="text-xs">Queue #{req.queuePosition}</Badge>
-              )}
+              <Badge className={statusColors[req.status] || "bg-gray-100 text-gray-600"}>
+                {statusLabels[req.status] || req.status}
+              </Badge>
               {isMyRequest && <Badge variant="outline" className="text-xs border-primary/40 text-primary">Your Request</Badge>}
             </div>
             <p className="text-sm text-muted-foreground">{req.targetCompany}</p>
             <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground flex-wrap">
-              <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{req.location || "Any"}</span>
+              {req.location && <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{req.location}</span>}
               <span className="flex items-center gap-1"><User className="h-3 w-3" />{req.requesterName}</span>
               <span>{formatDistanceToNow(new Date(req.createdAt), { addSuffix: true })}</span>
               <span className="flex items-center gap-1"><Award className="h-3 w-3 text-yellow-500" />{req.coinsCost} coins</span>
@@ -229,89 +193,51 @@ function RequestCard({ req, currentUserId, currentUserName, onRefresh }: {
             )}
           </div>
 
-          {/* Right side actions */}
           <div className="flex flex-col gap-2 items-end shrink-0">
             {req.status === "accepted" && req.deadlineAt && <TimeCountdown deadlineAt={req.deadlineAt} />}
 
+            {/* Accept button for "Refer Someone" tab */}
+            {showAccept && req.status === "open" && !isMyRequest && (
+              <Button size="sm" onClick={handleAccept} disabled={loading}>
+                {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <CheckCircle className="h-3.5 w-3.5 mr-1" />}
+                Accept & Refer
+              </Button>
+            )}
+
             {/* Referee: mark referred */}
             {isAcceptedByMe && req.status === "accepted" && (
-              <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" onClick={() => setShowConfirmNote(true)}>
+              <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" onClick={() => setShowNote(true)}>
                 <Upload className="h-3.5 w-3.5 mr-1" />Mark as Referred
               </Button>
             )}
 
             {/* Requester: confirm referral */}
             {isMyRequest && req.status === "referee_confirmed" && (
-              <Button size="sm" className="bg-teal-600 hover:bg-teal-700 text-white" onClick={handleRequesterConfirm}>
+              <Button size="sm" className="bg-teal-600 hover:bg-teal-700 text-white" onClick={handleRequesterConfirm} disabled={loading}>
                 <ThumbsUp className="h-3.5 w-3.5 mr-1" />Confirm I Was Referred
-              </Button>
-            )}
-
-            {/* Completed — offer permanent connection if temp was active */}
-            {req.status === "completed" && (isMyRequest || isAcceptedByMe) && (
-              <Button size="sm" variant="outline" onClick={handlePermanentConnect}>
-                <Link2 className="h-3.5 w-3.5 mr-1" />Keep Connection
-              </Button>
-            )}
-
-            {/* Boost queue (requester only, open status) */}
-            {isMyRequest && req.status === "open" && req.queuePosition > 1 && (
-              <Button size="sm" variant="outline" onClick={() => setShowBoost(true)}>
-                <Zap className="h-3.5 w-3.5 mr-1 text-yellow-500" />Boost Queue
               </Button>
             )}
           </div>
         </div>
 
-        {/* Referee confirmation note dialog */}
-        {showConfirmNote && (
+        {/* Referee note input */}
+        {showNote && (
           <div className="border rounded-lg p-3 bg-muted/30 space-y-2">
-            <p className="text-sm font-medium">Add a note or paste your referral confirmation link</p>
-            <Textarea placeholder="e.g. 'Submitted referral on Workday. Ref #ABC123' or paste a screenshot description..." rows={2}
+            <p className="text-sm font-medium">Add confirmation note</p>
+            <Textarea placeholder="e.g. 'Submitted referral on Workday. Ref #ABC123'" rows={2}
               value={note} onChange={e => setNote(e.target.value)} />
             <div className="flex gap-2">
-              <Button size="sm" variant="outline" onClick={() => setShowConfirmNote(false)}>Cancel</Button>
-              <Button size="sm" onClick={handleRefereeConfirm}><Send className="h-3.5 w-3.5 mr-1" />Submit Confirmation</Button>
+              <Button size="sm" variant="outline" onClick={() => setShowNote(false)}>Cancel</Button>
+              <Button size="sm" onClick={handleRefereeConfirm} disabled={loading}>
+                {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Send className="h-3.5 w-3.5 mr-1" />}
+                Submit
+              </Button>
             </div>
           </div>
         )}
 
-        {/* Boost dialog */}
-        {showBoost && (
-          <div className="border rounded-lg p-3 bg-muted/30 space-y-2">
-            <p className="text-sm font-medium flex items-center gap-1.5">
-              <Zap className="h-4 w-4 text-yellow-500" />Boost your queue position
-            </p>
-            <p className="text-xs text-muted-foreground">Every 50 coins moves you up 1 position. You have {profile.points} coins.</p>
-            <div className="flex gap-2 items-center">
-              <Input type="number" className="h-8 w-24 text-sm" value={boostCoins} min={50} step={50}
-                onChange={e => setBoostCoins(Number(e.target.value))} />
-              <span className="text-sm text-muted-foreground">coins → +{Math.floor(boostCoins / 50)} positions up</span>
-            </div>
-            <div className="flex gap-2">
-              <Button size="sm" variant="outline" onClick={() => setShowBoost(false)}>Cancel</Button>
-              <Button size="sm" onClick={handleBoost}><ArrowUp className="h-3.5 w-3.5 mr-1" />Boost Now</Button>
-            </div>
-          </div>
-        )}
-
-        {/* Temp chat */}
-        {showChat && (
-          <TempChat req={req} currentUserId={currentUserId} currentUserName={currentUserName} />
-        )}
-
-        {/* Connection ended notice */}
-        {req.status === "completed" && (isMyRequest || isAcceptedByMe) && !req.connectionActive && (
-          <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/30 rounded p-2">
-            <Link2Off className="h-3.5 w-3.5" />
-            Temporary connection ended. Click "Keep Connection" to stay connected permanently.
-          </div>
-        )}
+        {showChat && <TempChat requestId={req.id} me={me} />}
       </CardContent>
-
-      {/* Rating dialog */}
-      <RatingDialog open={showRating} onClose={() => setShowRating(false)} targetName={req.acceptedByName || "the referee"}
-        onSubmit={r => submitRating(req.id, "referee", { ...r, fromId: currentUserId, fromName: currentUserName })} />
     </Card>
   );
 }
@@ -319,210 +245,193 @@ function RequestCard({ req, currentUserId, currentUserName, onRefresh }: {
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function Referrals() {
   const { toast } = useToast();
-  const [profile] = useState(getProfile());
-  const [requests, setRequests] = useState<ReferralRequest[]>([]);
+  const [me, setMe] = useState<any>(getCachedUser());
+  const [requests, setRequests] = useState<any[]>([]);
   const [showNewDialog, setShowNewDialog] = useState(false);
   const [search, setSearch] = useState("");
   const [form, setForm] = useState({ targetCompany: "", position: "", location: "", message: "" });
   const [resumeFile, setResumeFile] = useState<File | null>(null);
-  const [resumeBase64, setResumeBase64] = useState("");
   const [coverLetter, setCoverLetter] = useState("");
   const [estimatedCost, setEstimatedCost] = useState(0);
-  const banned = isBanned();
+  const [submitting, setSubmitting] = useState(false);
 
-  const reload = () => { processExpiredRequests(); setRequests(getRequests()); };
+  const reload = async () => {
+    const [reqs, user] = await Promise.all([
+      api.requests.list().catch(() => []),
+      api.auth.me().catch(() => me),
+    ]);
+    setRequests(reqs);
+    setMe(user);
+  };
 
-  useEffect(() => {
-    reload();
-    window.addEventListener("chakri_requests_updated", reload);
-    const t = setInterval(reload, 15000);
-    return () => { window.removeEventListener("chakri_requests_updated", reload); clearInterval(t); };
-  }, []);
+  useEffect(() => { reload(); }, []);
+  useEffect(() => { setEstimatedCost(costForRole(form.position)); }, [form.position]);
 
-  useEffect(() => {
-    setEstimatedCost(costForRole(form.position));
-  }, [form.position]);
+  // Requests I posted
+  const myRequests = requests.filter(r => r.requesterId === me?.id);
 
-  const myActive = requests.filter(r => r.requesterId === profile.id && (r.status === "open" || r.status === "accepted" || r.status === "referee_confirmed"));
-  const myAccepted = requests.filter(r => r.acceptedById === profile.id && (r.status === "accepted" || r.status === "referee_confirmed"));
-  const incomingOpen = requests.filter(r =>
-    r.requesterId !== profile.id &&
-    r.acceptedById !== profile.id &&
+  // Open requests at MY company that others posted — for me to refer
+  const referSomeone = requests.filter(r =>
+    r.requesterId !== me?.id &&
     r.status === "open" &&
-    (!profile.company || r.targetCompany.toLowerCase() === profile.company.toLowerCase())
-  ).filter(r => !search || r.position.toLowerCase().includes(search.toLowerCase()) || r.targetCompany.toLowerCase().includes(search.toLowerCase()))
-   .sort((a, b) => a.queuePosition - b.queuePosition);
+    me?.company &&
+    r.targetCompany.toLowerCase() === me.company.toLowerCase()
+  ).filter(r =>
+    !search ||
+    r.position.toLowerCase().includes(search.toLowerCase()) ||
+    r.requesterName.toLowerCase().includes(search.toLowerCase())
+  ).sort((a: any, b: any) => a.queuePosition - b.queuePosition);
 
-  const handleCreate = () => {
+  // Requests I accepted as referee
+  const inProgress = requests.filter(r =>
+    r.acceptedById === me?.id &&
+    (r.status === "accepted" || r.status === "referee_confirmed")
+  );
+
+  const handleCreate = async () => {
     if (!form.targetCompany.trim() || !form.position.trim()) {
       toast({ title: "Company and Position are required", variant: "destructive" }); return;
     }
     if (!resumeFile) {
       toast({ title: "Please attach your resume", variant: "destructive" }); return;
     }
-    const r = createRequest({
-      requesterId: profile.id, requesterName: profile.name || "Anonymous",
-      requesterHeadline: profile.headline || "",
-      targetCompany: form.targetCompany, position: form.position,
-      location: form.location, message: form.message,
-    });
-    if (!r.ok) { toast({ title: r.msg, variant: "destructive" }); return; }
-    setForm({ targetCompany: "", position: "", location: "", message: "" });
-    setResumeFile(null); setResumeBase64(""); setCoverLetter("");
-    setShowNewDialog(false);
-    toast({ title: "Request posted! 🎉", description: r.msg });
-  };
-
-  const handleAccept = (req: ReferralRequest) => {
-    if (banned) { toast({ title: "You are temporarily banned.", variant: "destructive" }); return; }
-    const r = acceptRequest(req.id, profile.id, profile.name || "Someone");
-    toast({ title: r.ok ? "Accepted! ✅" : r.msg, description: r.ok ? "You have 24 hours to complete the referral." : undefined, variant: r.ok ? "default" : "destructive" });
+    setSubmitting(true);
+    try {
+      await api.requests.create({
+        targetCompany: form.targetCompany,
+        position: form.position,
+        location: form.location,
+        message: form.message,
+      });
+      setForm({ targetCompany: "", position: "", location: "", message: "" });
+      setResumeFile(null); setCoverLetter("");
+      setShowNewDialog(false);
+      toast({ title: "Request posted! 🎉" });
+      reload();
+    } catch (e: any) {
+      toast({ title: e.message || "Failed to post request", variant: "destructive" });
+    } finally { setSubmitting(false); }
   };
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-4xl">
-      {/* Ban / Strike banners */}
-      {banned && (
-        <Card className="mb-4 border-destructive bg-destructive/5">
-          <CardContent className="p-4 flex items-center gap-3">
-            <Ban className="h-5 w-5 text-destructive" />
-            <div>
-              <p className="font-semibold text-destructive">Account Temporarily Banned</p>
-              <p className="text-sm text-muted-foreground">Expires in {formatDistanceToNowStrict(new Date(profile.bannedUntil!))}.</p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-      {!banned && profile.strikes > 0 && (
-        <Card className="mb-4 border-amber-400 bg-amber-50 dark:bg-amber-950/20">
-          <CardContent className="p-4 flex items-center gap-3">
-            <AlertTriangle className="h-5 w-5 text-amber-600" />
-            <p className="text-sm text-amber-700"><strong>{profile.strikes}/3 strikes</strong> — 3 strikes = 1 week ban.</p>
-          </CardContent>
-        </Card>
-      )}
-
       <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
         <h1 className="text-3xl font-bold">Referral Center</h1>
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground flex items-center gap-1">
-            <Award className="h-4 w-4 text-yellow-500" />{profile.points} coins
+            <Award className="h-4 w-4 text-yellow-500" />{(me?.points || 0).toLocaleString()} coins
           </span>
-          <Button onClick={() => setShowNewDialog(true)} disabled={banned}>
+          <Button onClick={() => setShowNewDialog(true)}>
             <Plus className="h-4 w-4 mr-2" />Ask for Referral
           </Button>
         </div>
       </div>
 
-      {/* Limit indicator */}
-      <div className="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
-        <Info className="h-4 w-4" />
-        <span>Your active requests: <strong className={myActive.length >= 3 ? "text-destructive" : "text-primary"}>{myActive.length}/3</strong></span>
-        <span className="mx-2">·</span>
-        <span>Active referrals you're handling: <strong className={myAccepted.length >= MAX_ACTIVE_ACCEPTS ? "text-destructive" : "text-primary"}>{myAccepted.length}/{MAX_ACTIVE_ACCEPTS}</strong></span>
-      </div>
-
-      <Tabs defaultValue="incoming" className="space-y-4">
+      <Tabs defaultValue="refer" className="space-y-4">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="incoming">
+          <TabsTrigger value="refer">
             <Briefcase className="h-4 w-4 mr-1.5" />Refer Someone
-            {incomingOpen.length > 0 && <Badge className="ml-1.5 h-5 px-1.5 text-xs">{incomingOpen.length}</Badge>}
+            {referSomeone.length > 0 && <Badge className="ml-1.5 h-5 px-1.5 text-xs">{referSomeone.length}</Badge>}
           </TabsTrigger>
           <TabsTrigger value="mine">
             <User className="h-4 w-4 mr-1.5" />My Requests
-            {myActive.length > 0 && <Badge variant="outline" className="ml-1.5 h-5 px-1.5 text-xs">{myActive.length}</Badge>}
+            {myRequests.filter(r => r.status === "open" || r.status === "accepted").length > 0 &&
+              <Badge variant="outline" className="ml-1.5 h-5 px-1.5 text-xs">
+                {myRequests.filter(r => r.status === "open" || r.status === "accepted").length}
+              </Badge>}
           </TabsTrigger>
           <TabsTrigger value="inprogress">
             <Clock className="h-4 w-4 mr-1.5" />In Progress
-            {myAccepted.length > 0 && <Badge className="ml-1.5 h-5 px-1.5 text-xs bg-amber-500">{myAccepted.length}</Badge>}
+            {inProgress.length > 0 && <Badge className="ml-1.5 h-5 px-1.5 text-xs bg-amber-500">{inProgress.length}</Badge>}
           </TabsTrigger>
         </TabsList>
 
         {/* TAB 1: Refer Someone */}
-        <TabsContent value="incoming" className="space-y-3">
+        <TabsContent value="refer" className="space-y-3">
           <div className="flex items-center justify-between flex-wrap gap-2">
             <p className="text-sm text-muted-foreground">
-              {profile.company ? `Open requests for referrals at ${profile.company}` : "Set your company in Profile to see targeted requests"}
+              {me?.company
+                ? `Open referral requests at ${me.company}`
+                : "Set your company in Profile to see requests you can fulfill"}
             </p>
             <div className="relative w-52">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
               <Input className="pl-8 h-8 text-sm" placeholder="Filter..." value={search} onChange={e => setSearch(e.target.value)} />
             </div>
           </div>
-          {incomingOpen.length === 0 ? (
+          {!me?.company && (
+            <Card className="border-amber-300 bg-amber-50 dark:bg-amber-950/20">
+              <CardContent className="p-4 flex items-center gap-3">
+                <Info className="h-5 w-5 text-amber-600 shrink-0" />
+                <p className="text-sm text-amber-700">
+                  You need to set your current company in your <strong>Profile</strong> so people who want referrals at your company can find you.
+                </p>
+              </CardContent>
+            </Card>
+          )}
+          {referSomeone.length === 0 && me?.company && (
             <Card><CardContent className="py-12 text-center text-muted-foreground">
               <Briefcase className="h-10 w-10 mx-auto mb-3 opacity-30" />
-              <p className="font-medium">No open requests right now</p>
-              <p className="text-sm mt-1">Update your company in Profile to see relevant ones</p>
+              <p className="font-medium">No open requests for {me.company} right now</p>
+              <p className="text-sm mt-1">Check back later or ask colleagues to sign up</p>
             </CardContent></Card>
-          ) : incomingOpen.map(req => (
-            <div key={req.id} className="space-y-1">
-              <RequestCard req={req} currentUserId={profile.id} currentUserName={profile.name} onRefresh={reload} />
-              <div className="flex justify-end pr-1">
-                <Button size="sm" variant="default" onClick={() => handleAccept(req)} disabled={myAccepted.length >= MAX_ACTIVE_ACCEPTS}>
-                  <CheckCircle className="h-4 w-4 mr-1" />Accept & Refer
-                  {myAccepted.length >= MAX_ACTIVE_ACCEPTS && " (limit reached)"}
-                </Button>
-              </div>
-            </div>
+          )}
+          {referSomeone.map(req => (
+            <RequestCard key={req.id} req={req} me={me} onRefresh={reload} showAccept />
           ))}
         </TabsContent>
 
         {/* TAB 2: My Requests */}
         <TabsContent value="mine" className="space-y-3">
-          <p className="text-sm text-muted-foreground">Requests you posted (max 3 active at a time)</p>
-          {myActive.length === 0 && requests.filter(r => r.requesterId === profile.id).length === 0 ? (
+          <p className="text-sm text-muted-foreground">Referral requests you posted (max 3 active)</p>
+          {myRequests.length === 0 ? (
             <Card><CardContent className="py-12 text-center text-muted-foreground">
               <User className="h-10 w-10 mx-auto mb-3 opacity-30" />
               <p className="font-medium">No requests yet</p>
               <p className="text-sm mt-1">Click "Ask for Referral" to get started</p>
             </CardContent></Card>
-          ) : requests.filter(r => r.requesterId === profile.id).map(req => (
-            <RequestCard key={req.id} req={req} currentUserId={profile.id} currentUserName={profile.name} onRefresh={reload} />
+          ) : myRequests.map(req => (
+            <RequestCard key={req.id} req={req} me={me} onRefresh={reload} />
           ))}
         </TabsContent>
 
-        {/* TAB 3: In Progress (accepted by me as referee) */}
+        {/* TAB 3: In Progress */}
         <TabsContent value="inprogress" className="space-y-3">
-          <p className="text-sm text-muted-foreground">
-            Requests you accepted — complete within 24 hrs or earn a strike. Max {MAX_ACTIVE_ACCEPTS} at once.
-          </p>
-          {myAccepted.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Requests you accepted — complete within 24 hrs</p>
+          {inProgress.length === 0 ? (
             <Card><CardContent className="py-12 text-center text-muted-foreground">
               <CheckCircle className="h-10 w-10 mx-auto mb-3 opacity-30" />
               <p className="font-medium">Nothing in progress</p>
-              <p className="text-sm mt-1">Go to "Refer Someone" tab to accept requests</p>
+              <p className="text-sm mt-1">Go to "Refer Someone" to accept requests</p>
             </CardContent></Card>
-          ) : myAccepted.map(req => (
-            <RequestCard key={req.id} req={req} currentUserId={profile.id} currentUserName={profile.name} onRefresh={reload} />
+          ) : inProgress.map(req => (
+            <RequestCard key={req.id} req={req} me={me} onRefresh={reload} />
           ))}
         </TabsContent>
       </Tabs>
 
+      {/* New Request Dialog */}
       <Dialog open={showNewDialog} onOpenChange={setShowNewDialog}>
         <DialogContent className="sm:max-w-md max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>Ask for a Referral</DialogTitle>
-            <DialogDescription>
-              Coins are deducted upfront based on the seniority of the role.
-            </DialogDescription>
+            <DialogDescription>Coins are deducted upfront based on role seniority.</DialogDescription>
           </DialogHeader>
           <div className="overflow-y-auto flex-1 pr-1 space-y-4 pt-2">
             <div>
               <Label>Target Company *</Label>
-              <Input placeholder="e.g. Google, Microsoft, Infosys"
+              <Input placeholder="e.g. Google, Microsoft"
                 value={form.targetCompany} onChange={e => setForm(p => ({ ...p, targetCompany: e.target.value }))} />
             </div>
             <div>
               <Label>Role / Position *</Label>
-              <Input placeholder="e.g. Senior Software Engineer, VP Product"
+              <Input placeholder="e.g. Senior Software Engineer"
                 value={form.position} onChange={e => setForm(p => ({ ...p, position: e.target.value }))} />
               {form.position && (
                 <div className="mt-1.5 flex items-center gap-2 text-xs text-muted-foreground">
-                  <Badge variant="outline" className="text-xs">{labelForRole(form.position)}</Badge>
                   <span className="flex items-center gap-1">
-                    <Award className="h-3 w-3 text-yellow-500" />Costs <strong>{estimatedCost} Chakri Coins</strong>
-                    {profile.points < estimatedCost && <span className="text-destructive ml-1">(you have {profile.points})</span>}
+                    <Award className="h-3 w-3 text-yellow-500" />Costs <strong>{estimatedCost} coins</strong>
+                    {(me?.points || 0) < estimatedCost && <span className="text-destructive ml-1">(you have {me?.points || 0})</span>}
                   </span>
                 </div>
               )}
@@ -534,47 +443,33 @@ export default function Referrals() {
             </div>
             <div>
               <Label>Message (optional)</Label>
-              <Textarea placeholder="Why are you a good fit? Add context for the referrer..." rows={2}
+              <Textarea placeholder="Why are you a good fit?" rows={2}
                 value={form.message} onChange={e => setForm(p => ({ ...p, message: e.target.value }))} />
             </div>
-
-            {/* Resume upload — mandatory */}
             <div>
-              <Label className="flex items-center gap-1">
-                Resume * <span className="text-destructive">required</span>
-              </Label>
+              <Label>Resume * <span className="text-destructive text-xs">required</span></Label>
               <label className={`mt-1.5 flex items-center gap-3 border-2 border-dashed rounded-lg p-3 cursor-pointer transition-colors ${resumeFile ? "border-green-400 bg-green-50 dark:bg-green-950/20" : "border-muted-foreground/30 hover:border-primary/50"}`}>
                 <Upload className="h-5 w-5 shrink-0 text-muted-foreground" />
                 <div className="flex-1 min-w-0">
                   {resumeFile
-                    ? <p className="text-sm font-medium text-green-700 dark:text-green-400 truncate">✓ {resumeFile.name}</p>
-                    : <p className="text-sm text-muted-foreground">Click to upload PDF or DOC (max 5MB)</p>
-                  }
+                    ? <p className="text-sm font-medium text-green-700 truncate">✓ {resumeFile.name}</p>
+                    : <p className="text-sm text-muted-foreground">Click to upload PDF or DOC (max 5MB)</p>}
                 </div>
                 <input type="file" accept=".pdf,.doc,.docx" className="hidden" onChange={e => {
                   const file = e.target.files?.[0];
                   if (!file) return;
                   if (file.size > 5 * 1024 * 1024) { toast({ title: "File too large. Max 5MB.", variant: "destructive" }); return; }
                   setResumeFile(file);
-                  const reader = new FileReader();
-                  reader.onload = ev => setResumeBase64(ev.target?.result as string);
-                  reader.readAsDataURL(file);
                 }} />
               </label>
             </div>
-
-            {/* Cover letter — optional */}
             <div>
-              <Label className="flex items-center gap-1">
-                Cover Letter <span className="text-muted-foreground text-xs">(optional)</span>
-              </Label>
-              <Textarea placeholder="Write a brief cover letter for the referrer to share with the hiring team..." rows={3}
+              <Label>Cover Letter <span className="text-muted-foreground text-xs">(optional)</span></Label>
+              <Textarea placeholder="Brief cover letter for the referrer..." rows={3}
                 value={coverLetter} onChange={e => setCoverLetter(e.target.value)} className="mt-1.5" />
             </div>
-
-            {/* Role cost table */}
             <div className="border rounded-lg overflow-hidden text-xs">
-              <div className="bg-muted/50 px-3 py-1.5 font-medium">Chakri Coin Cost by Role</div>
+              <div className="bg-muted/50 px-3 py-1.5 font-medium">Coin Cost by Role</div>
               <div className="divide-y max-h-36 overflow-y-auto">
                 {ROLE_TIERS.map(t => (
                   <div key={t.label} className="flex justify-between px-3 py-1.5">
@@ -585,11 +480,11 @@ export default function Referrals() {
               </div>
             </div>
           </div>
-
           <div className="flex gap-2 justify-end pt-3 border-t mt-2">
             <Button variant="outline" onClick={() => setShowNewDialog(false)}>Cancel</Button>
-            <Button onClick={handleCreate} disabled={profile.points < estimatedCost && form.position.length > 0}>
-              <Send className="h-4 w-4 mr-2" />Post ({estimatedCost} coins)
+            <Button onClick={handleCreate} disabled={submitting || ((me?.points || 0) < estimatedCost && form.position.length > 0)}>
+              {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
+              Post ({estimatedCost} coins)
             </Button>
           </div>
         </DialogContent>
