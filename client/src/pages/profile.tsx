@@ -11,9 +11,11 @@ import { Edit, MapPin, Building2, Award, Save, X, Star, ThumbsUp, Plus, Trash2, 
 import { api, getCachedUser } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
+import { useLocation } from "wouter";
 
 export default function Profile() {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [profile, setProfile] = useState<any>(getCachedUser() || {});
   const [recs, setRecs] = useState<any[]>([]);
   const [isEditing, setIsEditing] = useState(false);
@@ -142,7 +144,10 @@ export default function Profile() {
               </div>
 
               <div className="flex gap-6 mt-4 pt-4 border-t">
-                <div className="text-center"><p className="text-2xl font-bold">{(profile.permanentConnections || []).length}</p><p className="text-xs text-muted-foreground">Connections</p></div>
+                <button className="text-center hover:opacity-70 transition-opacity" onClick={() => setLocation("/connections")}>
+                  <p className="text-2xl font-bold">{(profile.permanentConnections || []).length}</p>
+                  <p className="text-xs text-muted-foreground underline-offset-2 hover:underline">Connections</p>
+                </button>
                 <div className="text-center"><p className="text-2xl font-bold">{(profile.points || 0).toLocaleString()}</p><p className="text-xs text-muted-foreground">Coins</p></div>
                 <div className="text-center"><p className="text-2xl font-bold">{recs.length}</p><p className="text-xs text-muted-foreground">Recommendations</p></div>
               </div>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,28 +6,31 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Settings, Bell, Shield, Trash2, Moon, Sun, HelpCircle, FileText, AlertTriangle } from "lucide-react";
-import { getProfile, saveProfile, logout } from "@/lib/userStore";
+import { Settings, Bell, Shield, Trash2, HelpCircle, FileText, AlertTriangle } from "lucide-react";
+import { api, getCachedUser, clearSession } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 
 export default function SettingsPage() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
-  const [profile, setProfile] = useState(getProfile());
+  const [profile, setProfile] = useState(getCachedUser() || {});
   const [notifReferrals, setNotifReferrals] = useState(true);
   const [notifMessages, setNotifMessages] = useState(true);
   const [notifSystem, setNotifSystem] = useState(true);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  const handleSave = () => {
-    saveProfile({ phone: profile.phone, email: profile.email });
+  useEffect(() => {
+    api.auth.me().then(setProfile).catch(() => {});
+  }, []);
+
+  const handleSave = async () => {
+    await api.auth.update({ phone: profile.phone, email: profile.email });
     toast({ title: "Settings saved!" });
   };
 
   const handleDeleteAccount = () => {
-    localStorage.clear();
-    logout();
+    clearSession();
     setLocation("/");
   };
 

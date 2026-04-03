@@ -5,12 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { HelpCircle, Mail, MessageSquare, Bug, Send, CheckCircle } from "lucide-react";
-import { getProfile } from "@/lib/userStore";
+import { getCachedUser } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Contact() {
   const { toast } = useToast();
-  const profile = getProfile();
+  const profile = getCachedUser() || {};
   const [form, setForm] = useState({ name: profile.name || "", email: profile.email || "", subject: "", message: "" });
   const [submitted, setSubmitted] = useState(false);
 

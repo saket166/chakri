@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Award, ShoppingBag, Clock } from "lucide-react";
-import { getProfile } from "@/lib/userStore";
+import { api, getCachedUser } from "@/lib/api";
 
 interface Item {
   id: string; name: string; description: string;
@@ -13,16 +13,16 @@ interface Item {
 const items: Item[] = [
   { id:"1",  name:"Amazon Gift Card ₹500",    description:"Shop anything on Amazon India",       pointsCost:5000,  category:"gift-card",    brand:"Amazon",    emoji:"🛒",  comingSoon:true },
   { id:"2",  name:"Amazon Gift Card ₹1000",   description:"Shop anything on Amazon India",       pointsCost:10000, category:"gift-card",    brand:"Amazon",    emoji:"🛒",  comingSoon:true },
-  { id:"3",  name:"Flipkart Gift Card ₹500",  description:"Shop on Flipkart",                    pointsCost:5000,  category:"gift-card",    brand:"Flipkart",  emoji:"🛍️", comingSoon:true  },
-  { id:"4",  name:"Swiggy Credits ₹300",      description:"Order your favourite food",           pointsCost:3000,  category:"food",         brand:"Swiggy",    emoji:"🍔",  comingSoon:true  },
-  { id:"5",  name:"Zomato Credits ₹300",      description:"Order your favourite food",           pointsCost:3000,  category:"food",         brand:"Zomato",    emoji:"🍕",  comingSoon:true  },
-  { id:"6",  name:"Netflix 1 Month",          description:"Stream movies and shows",             pointsCost:6490,  category:"entertainment",brand:"Netflix",   emoji:"🎬",  comingSoon:true  },
-  { id:"7",  name:"Spotify Premium 1 Month",  description:"Ad-free music streaming",             pointsCost:1190,  category:"entertainment",brand:"Spotify",   emoji:"🎵",  comingSoon:true  },
-  { id:"8",  name:"Myntra Gift Card ₹500",    description:"Fashion & lifestyle",                 pointsCost:5000,  category:"gift-card",    brand:"Myntra",    emoji:"👗",  comingSoon:true  },
-  { id:"9",  name:"PhonePe Cashback ₹200",    description:"Direct to PhonePe wallet",            pointsCost:2000,  category:"cashback",     brand:"PhonePe",   emoji:"💸",  comingSoon:true  },
-  { id:"10", name:"Paytm Cash ₹500",          description:"Direct to Paytm wallet",              pointsCost:5000,  category:"cashback",     brand:"Paytm",     emoji:"💰",  comingSoon:true  },
-  { id:"11", name:"Bigbasket Voucher ₹500",   description:"Groceries delivered home",            pointsCost:5000,  category:"food",         brand:"Bigbasket", emoji:"🥦",  comingSoon:true  },
-  { id:"12", name:"Nykaa Gift Card ₹500",     description:"Beauty & personal care",              pointsCost:5000,  category:"gift-card",    brand:"Nykaa",     emoji:"💄",  comingSoon:true  },
+  { id:"3",  name:"Flipkart Gift Card ₹500",  description:"Shop on Flipkart",                    pointsCost:5000,  category:"gift-card",    brand:"Flipkart",  emoji:"🛍️", comingSoon:true },
+  { id:"4",  name:"Swiggy Credits ₹300",      description:"Order your favourite food",           pointsCost:3000,  category:"food",         brand:"Swiggy",    emoji:"🍔",  comingSoon:true },
+  { id:"5",  name:"Zomato Credits ₹300",      description:"Order your favourite food",           pointsCost:3000,  category:"food",         brand:"Zomato",    emoji:"🍕",  comingSoon:true },
+  { id:"6",  name:"Netflix 1 Month",          description:"Stream movies and shows",             pointsCost:6490,  category:"entertainment",brand:"Netflix",   emoji:"🎬",  comingSoon:true },
+  { id:"7",  name:"Spotify Premium 1 Month",  description:"Ad-free music streaming",             pointsCost:1190,  category:"entertainment",brand:"Spotify",   emoji:"🎵",  comingSoon:true },
+  { id:"8",  name:"Myntra Gift Card ₹500",    description:"Fashion & lifestyle",                 pointsCost:5000,  category:"gift-card",    brand:"Myntra",    emoji:"👗",  comingSoon:true },
+  { id:"9",  name:"PhonePe Cashback ₹200",    description:"Direct to PhonePe wallet",            pointsCost:2000,  category:"cashback",     brand:"PhonePe",   emoji:"💸",  comingSoon:true },
+  { id:"10", name:"Paytm Cash ₹500",          description:"Direct to Paytm wallet",              pointsCost:5000,  category:"cashback",     brand:"Paytm",     emoji:"💰",  comingSoon:true },
+  { id:"11", name:"Bigbasket Voucher ₹500",   description:"Groceries delivered home",            pointsCost:5000,  category:"food",         brand:"Bigbasket", emoji:"🥦",  comingSoon:true },
+  { id:"12", name:"Nykaa Gift Card ₹500",     description:"Beauty & personal care",              pointsCost:5000,  category:"gift-card",    brand:"Nykaa",     emoji:"💄",  comingSoon:true },
 ];
 
 const categories = ["all","gift-card","food","entertainment","cashback"];
@@ -31,8 +31,13 @@ const categoryLabels: Record<string,string> = {
 };
 
 export default function Marketplace() {
-  const [points, setPoints] = useState(getProfile().points);
+  const [points, setPoints] = useState(getCachedUser()?.points || 0);
   const [activeCategory, setActiveCategory] = useState("all");
+
+  useEffect(() => {
+    api.auth.me().then(u => setPoints(u.points)).catch(() => {});
+  }, []);
+
   const filtered = activeCategory === "all" ? items : items.filter(i => i.category === activeCategory);
 
   return (
@@ -46,7 +51,6 @@ export default function Marketplace() {
         <p className="text-muted-foreground">Redeem your Chakri Coins for rewards — more options coming soon!</p>
       </div>
 
-      {/* Balance */}
       <Card className="mb-6 border-primary/20 bg-gradient-to-r from-primary/10 to-transparent">
         <CardContent className="flex items-center justify-between p-5">
           <div className="flex items-center gap-4">
@@ -61,12 +65,11 @@ export default function Marketplace() {
           </div>
           <div className="text-right text-sm text-muted-foreground hidden md:block">
             <p>Refer someone → earn <span className="font-semibold text-primary">+coins</span></p>
-            <p>Successful hire → earn <span className="font-semibold text-primary">+2000 coins</span></p>
+            <p>Successful referral → earn <span className="font-semibold text-primary">1.5× back</span></p>
           </div>
         </CardContent>
       </Card>
 
-      {/* Category filter */}
       <div className="flex gap-2 flex-wrap mb-6">
         {categories.map(cat => (
           <Button key={cat} size="sm" variant={activeCategory === cat ? "default" : "outline"} onClick={() => setActiveCategory(cat)}>
