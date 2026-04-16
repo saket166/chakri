@@ -3,62 +3,53 @@ import { db } from "./db";
 import { users, feedItems } from "@shared/schema";
 import { eq, ilike } from "drizzle-orm";
 import bcrypt from "bcryptjs";
+import nodemailer from "nodemailer"; // <-- Required for Gmail SMTP
 
 // Generate 6-digit OTP
 function generateOTP(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-/**
- * Sends OTP via Resend API
- * Note: While in trial/testing, you may need to use 'onboarding@resend.dev' 
- * and verify your recipient email in the Resend dashboard.
- */
+// ── Send OTP via Gmail ─────────────────────────────────────────────────────
 async function sendOTPEmail(email: string, otp: string, name: string): Promise<void> {
   console.log(`\n====== OTP FOR ${email} ======\nOTP: ${otp}\n==============================\n`);
 
-  if (!process.env.RESEND_API_KEY) {
-    console.log("No RESEND_API_KEY set — OTP only in logs");
+  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
+    console.log("No Gmail credentials set — OTP only in logs");
     return;
   }
 
-  try {
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${process.env.RESEND_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        // Change to your verified domain once configured in Resend
-        from: "Chakri <onboarding@resend.dev>", 
-        to: [email],
-        subject: "Your Chakri verification code",
-        html: `
-          <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#f9fafb;border-radius:12px">
-            <div style="text-align:center;margin-bottom:24px">
-              <div style="display:inline-block;background:#7c3aed;color:white;font-size:24px;font-weight:bold;padding:8px 20px;border-radius:8px">Chakri</div>
-            </div>
-            <h2 style="color:#111827;font-size:20px;margin:0 0 8px">Welcome, ${name}!</h2>
-            <p style="color:#6b7280;font-size:15px;margin:0 0 24px">Use this code to verify your email address. It expires in 10 minutes.</p>
-            <div style="background:white;border:2px solid #7c3aed;border-radius:12px;padding:24px;text-align:center;margin-bottom:24px">
-              <p style="color:#6b7280;font-size:13px;margin:0 0 8px;letter-spacing:1px;text-transform:uppercase">Verification Code</p>
-              <p style="color:#7c3aed;font-size:48px;font-weight:bold;letter-spacing:16px;margin:0">${otp}</p>
-            </div>
-            <p style="color:#9ca3af;font-size:13px;text-align:center;margin:0">If you didn't create a Chakri account, you can safely ignore this email.</p>
-          </div>
-        `,
-      }),
-    });
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: process.env.GMAIL_USER,
+      pass: process.env.GMAIL_APP_PASSWORD,
+    },
+  });
 
-    if (!res.ok) {
-      const err = await res.text();
-      console.error("Resend API error response:", err);
-    } else {
-      console.log(`OTP email successfully sent to ${email}`);
-    }
+  try {
+    await transporter.sendMail({
+      from: `"Chakri" <${process.env.GMAIL_USER}>`,
+      to: email,
+      subject: "Your Chakri verification code",
+      html: `
+        <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#f9fafb;border-radius:12px">
+          <div style="text-align:center;margin-bottom:24px">
+            <div style="display:inline-block;background:#7c3aed;color:white;font-size:24px;font-weight:bold;padding:8px 20px;border-radius:8px">Chakri</div>
+          </div>
+          <h2 style="color:#111827;font-size:20px;margin:0 0 8px">Hi ${name}!</h2>
+          <p style="color:#6b7280;font-size:15px;margin:0 0 24px">Your verification code for Chakri is below. It expires in 10 minutes.</p>
+          <div style="background:white;border:2px solid #7c3aed;border-radius:12px;padding:24px;text-align:center;margin-bottom:24px">
+            <p style="color:#6b7280;font-size:13px;margin:0 0 8px;letter-spacing:1px;text-transform:uppercase">Verification Code</p>
+            <p style="color:#7c3aed;font-size:48px;font-weight:bold;letter-spacing:16px;margin:0">${otp}</p>
+          </div>
+          <p style="color:#9ca3af;font-size:13px;text-align:center;margin:0">If you didn't sign up for Chakri, you can safely ignore this email.</p>
+        </div>
+      `,
+    });
+    console.log(`OTP email sent to ${email}`);
   } catch (e) {
-    console.error("Failed to execute fetch to Resend:", e);
+    console.error("Failed to send email:", e);
   }
 }
 
@@ -120,7 +111,7 @@ export function registerAuthRoutes(app: Express) {
         otpCode: otp,
         otpExpiresAt,
         emailVerified: false,
-        points: 500, // Welcome points
+        points: 500, // Welcome points for the referral marketplace
       }).returning();
 
       await sendOTPEmail(trimmedEmail, otp, name);
@@ -155,11 +146,12 @@ export function registerAuthRoutes(app: Express) {
       await db.insert(feedItems).values({ 
         type: "new_member", 
         text: `${verified.name} just joined Chakri! 👋` 
-      }).catch(() => {});
+      }).catch((err) => { console.error("Feed insert error:", err) });
 
       const { passwordHash, otpCode, ...safeUser } = verified;
       return res.json(safeUser);
     } catch (e) {
+      console.error("Verification error:", e);
       return res.status(500).json({ error: "Verification failed" });
     }
   });
@@ -169,16 +161,21 @@ export function registerAuthRoutes(app: Express) {
     const { email, password } = req.body;
     if (!email || !password) return res.status(400).json({ error: "Missing credentials" });
 
-    const [user] = await db.select().from(users).where(ilike(users.email, email.trim())).limit(1);
-    
-    if (!user) return res.status(401).json({ error: "Account not found." });
-    if (!user.emailVerified) return res.status(401).json({ error: "Please verify your email first." });
+    try {
+      const [user] = await db.select().from(users).where(ilike(users.email, email.trim())).limit(1);
+      
+      if (!user) return res.status(401).json({ error: "Account not found." });
+      if (!user.emailVerified) return res.status(401).json({ error: "Please verify your email first." });
 
-    const valid = await bcrypt.compare(password, user.passwordHash || "");
-    if (!valid) return res.status(401).json({ error: "Invalid password." });
+      const valid = await bcrypt.compare(password, user.passwordHash || "");
+      if (!valid) return res.status(401).json({ error: "Invalid password." });
 
-    const { passwordHash, otpCode, ...safeUser } = user;
-    return res.json(safeUser);
+      const { passwordHash, otpCode, ...safeUser } = user;
+      return res.json(safeUser);
+    } catch (e) {
+      console.error("Signin error:", e);
+      return res.status(500).json({ error: "Sign in failed" });
+    }
   });
 
   // ── Resend OTP ─────────────────────────────────────────────────────────────
@@ -196,6 +193,7 @@ export function registerAuthRoutes(app: Express) {
       
       return res.json({ message: "OTP resent" });
     } catch (e) {
+      console.error("Resend OTP error:", e);
       return res.status(500).json({ error: "Failed to resend OTP" });
     }
   });
