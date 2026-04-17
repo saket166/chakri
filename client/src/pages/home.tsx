@@ -4,64 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Award, Briefcase, Users, Zap, Building2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
-// ── Inline bar chart — no extra dependencies ───────────────────────────────
-function CompanyBarChart({ data }: { data: { company: string; count: number }[] }) {
-  const [hovered, setHovered] = useState<string | null>(null);
-  if (data.length === 0) return null;
-  const max = Math.max(...data.map(d => d.count));
-
-  // Brand colours cycle
-  const COLORS = [
-    "#7c3aed", "#2563eb", "#16a34a", "#d97706",
-    "#db2777", "#0891b2", "#ea580c", "#65a30d",
-    "#9333ea", "#0284c7",
-  ];
-
-  return (
-    <div className="space-y-2">
-      {data.map((row, i) => {
-        const pct = Math.max(8, Math.round((row.count / max) * 100));
-        const color = COLORS[i % COLORS.length];
-        const isHov = hovered === row.company;
-        return (
-          <div
-            key={row.company}
-            className="group cursor-default"
-            onMouseEnter={() => setHovered(row.company)}
-            onMouseLeave={() => setHovered(null)}
-          >
-            <div className="flex justify-between items-center mb-0.5">
-              <span
-                className="text-xs font-medium truncate max-w-[120px]"
-                title={row.company}
-                style={{ color: isHov ? color : undefined }}
-              >
-                {row.company}
-              </span>
-              <span
-                className="text-xs font-semibold tabular-nums ml-2"
-                style={{ color }}
-              >
-                {row.count}
-              </span>
-            </div>
-            <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
-              <div
-                className="h-full rounded-full transition-all duration-500 ease-out"
-                style={{
-                  width: `${pct}%`,
-                  backgroundColor: color,
-                  opacity: hovered && !isHov ? 0.45 : 1,
-                }}
-              />
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
 export default function Home() {
   const [feed, setFeed] = useState<any[]>([]);
   const [user, setUser] = useState<any>(getCachedUser());
@@ -93,6 +35,7 @@ export default function Home() {
 
         {/* ── Left column ── */}
         <div className="space-y-4">
+
           {/* User info card */}
           <Card>
             <CardContent className="p-5">
@@ -115,7 +58,7 @@ export default function Home() {
             </CardContent>
           </Card>
 
-          {/* Company distribution bar chart */}
+          {/* Companies on Chakri box */}
           <Card>
             <CardHeader className="pb-2 pt-4 px-5">
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
@@ -124,15 +67,28 @@ export default function Home() {
               </CardTitle>
             </CardHeader>
             <CardContent className="px-5 pb-5">
-              {loading && (
-                <p className="text-xs text-muted-foreground">Loading…</p>
-              )}
+              {loading && <p className="text-xs text-muted-foreground">Loading…</p>}
               {!loading && companyStats.length === 0 && (
-                <p className="text-xs text-muted-foreground">No company data yet.</p>
+                <p className="text-xs text-muted-foreground">No companies yet.</p>
               )}
-              <CompanyBarChart data={companyStats} />
+              {!loading && companyStats.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {companyStats.map(({ company, count }) => (
+                    <div
+                      key={company}
+                      className="flex items-center gap-1.5 bg-muted rounded-full px-3 py-1"
+                    >
+                      <span className="text-xs font-medium">{company}</span>
+                      <span className="text-xs text-muted-foreground bg-background rounded-full px-1.5 py-0.5 font-semibold">
+                        {count}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
+
         </div>
 
         {/* ── Center — feed ── */}
@@ -140,11 +96,13 @@ export default function Home() {
           <h2 className="text-xl font-bold">Community Activity</h2>
           {loading && <p className="text-muted-foreground text-sm">Loading feed...</p>}
           {!loading && feed.length === 0 && (
-            <Card><CardContent className="py-12 text-center text-muted-foreground">
-              <Zap className="h-10 w-10 mx-auto mb-3 opacity-20" />
-              <p className="font-medium">No activity yet</p>
-              <p className="text-sm mt-1">Activity appears here as the community uses Chakri</p>
-            </CardContent></Card>
+            <Card>
+              <CardContent className="py-12 text-center text-muted-foreground">
+                <Zap className="h-10 w-10 mx-auto mb-3 opacity-20" />
+                <p className="font-medium">No activity yet</p>
+                <p className="text-sm mt-1">Activity appears here as the community uses Chakri</p>
+              </CardContent>
+            </Card>
           )}
           {feed.map(item => (
             <Card key={item.id} className="hover:shadow-sm transition-all">

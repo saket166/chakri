@@ -302,7 +302,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const [referee] = await db.select().from(users).where(eq(users.id, r.acceptedById)).limit(1);
       if (referee) await db.update(users).set({ points: referee.points + reward }).where(eq(users.id, r.acceptedById));
     }
-    await db.insert(feedItems).values({ type: "referral_completed" as any, text: `${r.requesterName} was successfully referred for ${r.position} at ${r.targetCompany}! 🎉` });
+    await db.insert(feedItems).values({ type: "referral_completed" as any, text: `Someone was referred for ${r.position} at ${r.targetCompany}! 🎉` });
     return res.json({ updated, reward });
   });
 
