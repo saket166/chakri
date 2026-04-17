@@ -52,6 +52,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return res.json(user);
   });
 
+  app.delete("/api/users/me", async (req: Request, res: Response) => {
+    const userId = getUser(req);
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
+    try {
+      await db.delete(users).where(eq(users.id, userId));
+      return res.json({ ok: true });
+    } catch (e: any) {
+      console.error("Delete account error:", e);
+      return res.status(500).json({ error: "Failed to delete account. Please try again." });
+    }
+  });
+
   app.get("/api/users/search", async (req: Request, res: Response) => {
     const userId = getUser(req);
     const q = (req.query.q as string || "").trim();

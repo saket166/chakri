@@ -8,6 +8,14 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Settings, Bell, Shield, Trash2, HelpCircle, FileText, AlertTriangle } from "lucide-react";
 import { api, getCachedUser, clearSession } from "@/lib/api";
+
+async function deleteMe(): Promise<void> {
+  const r = await fetch("/api/users/me", {
+    method: "DELETE",
+    headers: { "x-user-id": localStorage.getItem("chakri_user_id") || "" },
+  });
+  if (!r.ok) throw new Error((await r.json()).error || "Delete failed");
+}
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 
@@ -19,6 +27,7 @@ export default function SettingsPage() {
   const [notifMessages, setNotifMessages] = useState(true);
   const [notifSystem, setNotifSystem] = useState(true);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     api.auth.me().then(setProfile).catch(() => {});
@@ -29,9 +38,16 @@ export default function SettingsPage() {
     toast({ title: "Settings saved!" });
   };
 
-  const handleDeleteAccount = () => {
-    clearSession();
-    setLocation("/");
+  const handleDeleteAccount = async () => {
+    setDeleting(true);
+    try {
+      await deleteMe();
+      clearSession();
+      setLocation("/");
+    } catch (e: any) {
+      toast({ title: "Could not delete account", description: e.message, variant: "destructive" });
+      setDeleting(false);
+    }
   };
 
   return (
@@ -127,7 +143,9 @@ export default function SettingsPage() {
                 <p className="text-sm text-destructive font-medium">Are you sure? This cannot be undone.</p>
                 <div className="flex gap-2">
                   <Button variant="outline" size="sm" onClick={() => setShowDeleteConfirm(false)}>Cancel</Button>
-                  <Button variant="destructive" size="sm" onClick={handleDeleteAccount}>Yes, Delete Everything</Button>
+                  <Button variant="destructive" size="sm" onClick={handleDeleteAccount} disabled={deleting}>
+                    {deleting ? "Deleting…" : "Yes, Delete Everything"}
+                  </Button>
                 </div>
               </div>
             )}
