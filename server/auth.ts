@@ -3,64 +3,23 @@ import { db } from "./db";
 import { users, feedItems } from "@shared/schema";
 import { eq, ilike } from "drizzle-orm";
 import bcrypt from "bcryptjs";
-import nodemailer from "nodemailer"; // <-- Required for Gmail SMTP
 
-// Generate 6-digit OTP
-function generateOTP(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString();
-}
-
-// ── Send OTP via Gmail ─────────────────────────────────────────────────────
-async function sendOTPEmail(email: string, otp: string, name: string): Promise<void> {
-  console.log(`\n====== OTP FOR ${email} ======\nOTP: ${otp}\n==============================\n`);
-
-  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
-    console.log("No Gmail credentials set — OTP only in logs");
-    return;
-  }
-
-  const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: process.env.GMAIL_USER,
-      pass: process.env.GMAIL_APP_PASSWORD,
-    },
-  });
-
-  try {
-    await transporter.sendMail({
-      from: `"Chakri" <${process.env.GMAIL_USER}>`,
-      to: email,
-      subject: "Your Chakri verification code",
-      html: `
-        <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#f9fafb;border-radius:12px">
-          <div style="text-align:center;margin-bottom:24px">
-            <div style="display:inline-block;background:#7c3aed;color:white;font-size:24px;font-weight:bold;padding:8px 20px;border-radius:8px">Chakri</div>
-          </div>
-          <h2 style="color:#111827;font-size:20px;margin:0 0 8px">Hi ${name}!</h2>
-          <p style="color:#6b7280;font-size:15px;margin:0 0 24px">Your verification code for Chakri is below. It expires in 10 minutes.</p>
-          <div style="background:white;border:2px solid #7c3aed;border-radius:12px;padding:24px;text-align:center;margin-bottom:24px">
-            <p style="color:#6b7280;font-size:13px;margin:0 0 8px;letter-spacing:1px;text-transform:uppercase">Verification Code</p>
-            <p style="color:#7c3aed;font-size:48px;font-weight:bold;letter-spacing:16px;margin:0">${otp}</p>
-          </div>
-          <p style="color:#9ca3af;font-size:13px;text-align:center;margin:0">If you didn't sign up for Chakri, you can safely ignore this email.</p>
-        </div>
-      `,
-    });
-    console.log(`OTP email sent to ${email}`);
-  } catch (e) {
-    console.error("Failed to send email:", e);
-  }
+// Basic email format check
+function isValidEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
 export function registerAuthRoutes(app: Express) {
 
-  // ── Sign Up Step 1: Create account & send OTP ──────────────────────────────
+  // ── Sign Up — no OTP, instant activation ──────────────────────────────────
   app.post("/api/auth/signup", async (req: Request, res: Response) => {
     const { email, name, password, phone, headline, company, location } = req.body;
-    
+
     if (!email || !name || !password) {
       return res.status(400).json({ error: "Email, name and password are required" });
+    }
+    if (!isValidEmail(email.trim())) {
+      return res.status(400).json({ error: "Please enter a valid email address." });
     }
     if (password.length < 6) {
       return res.status(400).json({ error: "Password must be at least 6 characters" });
@@ -77,45 +36,51 @@ export function registerAuthRoutes(app: Express) {
         return res.status(400).json({ error: "An account with this email already exists." });
       }
 
-      const otp = generateOTP();
-      const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); 
       const passwordHash = await bcrypt.hash(password, 10);
 
+      let user;
+
       if (existing.length > 0) {
-        // Update unverified account with new details and OTP
-        await db.update(users).set({ 
-          name, 
-          passwordHash, 
-          otpCode: otp, 
-          otpExpiresAt, 
-          phone: phone || "", 
-          headline: headline || "", 
-          company: company || "", 
-          location: location || "" 
+        // Re-signup for an unverified account — just activate it now
+        const [updated] = await db.update(users).set({
+          name,
+          passwordHash,
+          phone: phone || "",
+          headline: headline || "",
+          company: company || "",
+          location: location || "",
+          emailVerified: true,
+          otpCode: "",
+          otpExpiresAt: null,
         })
-        .where(eq(users.id, existing[0].id));
-        
-        await sendOTPEmail(trimmedEmail, otp, name);
-        return res.json({ message: "OTP sent", userId: existing[0].id });
+        .where(eq(users.id, existing[0].id))
+        .returning();
+        user = updated;
+      } else {
+        // Brand new account — verified immediately
+        const [created] = await db.insert(users).values({
+          email: trimmedEmail,
+          name,
+          passwordHash,
+          phone: phone || "",
+          headline: headline || "",
+          company: company || "",
+          location: location || "",
+          emailVerified: true,
+          points: 500,
+        }).returning();
+        user = created;
       }
 
-      // Create new account
-      const [user] = await db.insert(users).values({
-        email: trimmedEmail,
-        name,
-        passwordHash,
-        phone: phone || "",
-        headline: headline || "",
-        company: company || "",
-        location: location || "",
-        otpCode: otp,
-        otpExpiresAt,
-        emailVerified: false,
-        points: 500, // Welcome points for the referral marketplace
-      }).returning();
+      // Social feed: new member joined (company-based, anonymous)
+      const feedText = user.company
+        ? `Someone from ${user.company} just joined Chakri! 👋`
+        : `A new professional just joined Chakri! 👋`;
+      await db.insert(feedItems).values({ type: "new_member", text: feedText })
+        .catch((err) => { console.error("Feed insert error:", err); });
 
-      await sendOTPEmail(trimmedEmail, otp, name);
-      return res.json({ message: "OTP sent", userId: user.id });
+      const { passwordHash: _ph, otpCode: _otp, ...safeUser } = user;
+      return res.json(safeUser);
 
     } catch (e: any) {
       console.error("Signup error:", e);
@@ -123,52 +88,18 @@ export function registerAuthRoutes(app: Express) {
     }
   });
 
-  // ── Sign Up Step 2: Verify OTP ─────────────────────────────────────────────
-  app.post("/api/auth/verify-otp", async (req: Request, res: Response) => {
-    const { userId, otp } = req.body;
-    if (!userId || !otp) return res.status(400).json({ error: "Missing userId or OTP" });
-
-    try {
-      const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
-      
-      if (!user) return res.status(404).json({ error: "User not found" });
-      if (user.otpCode !== otp) return res.status(400).json({ error: "Incorrect OTP." });
-      if (!user.otpExpiresAt || new Date() > user.otpExpiresAt) {
-        return res.status(400).json({ error: "OTP expired. Please request a new one." });
-      }
-
-      const [verified] = await db.update(users)
-        .set({ emailVerified: true, otpCode: "", otpExpiresAt: null })
-        .where(eq(users.id, userId))
-        .returning();
-
-      // Social trigger: New member joined feed (company-based, anonymous)
-      const feedText = verified.company
-        ? `Someone from ${verified.company} just joined Chakri! 👋`
-        : `A new professional just joined Chakri! 👋`;
-      await db.insert(feedItems).values({ 
-        type: "new_member", 
-        text: feedText,
-      }).catch((err) => { console.error("Feed insert error:", err) });
-
-      const { passwordHash, otpCode, ...safeUser } = verified;
-      return res.json(safeUser);
-    } catch (e) {
-      console.error("Verification error:", e);
-      return res.status(500).json({ error: "Verification failed" });
-    }
-  });
-
   // ── Sign In ────────────────────────────────────────────────────────────────
   app.post("/api/auth/signin", async (req: Request, res: Response) => {
     const { email, password } = req.body;
     if (!email || !password) return res.status(400).json({ error: "Missing credentials" });
+    if (!isValidEmail(email.trim())) {
+      return res.status(400).json({ error: "Please enter a valid email address." });
+    }
 
     try {
       const [user] = await db.select().from(users).where(ilike(users.email, email.trim())).limit(1);
-      
+
       if (!user) return res.status(401).json({ error: "Account not found." });
-      if (!user.emailVerified) return res.status(401).json({ error: "Please verify your email first." });
 
       const valid = await bcrypt.compare(password, user.passwordHash || "");
       if (!valid) return res.status(401).json({ error: "Invalid password." });
@@ -178,26 +109,6 @@ export function registerAuthRoutes(app: Express) {
     } catch (e) {
       console.error("Signin error:", e);
       return res.status(500).json({ error: "Sign in failed" });
-    }
-  });
-
-  // ── Resend OTP ─────────────────────────────────────────────────────────────
-  app.post("/api/auth/resend-otp", async (req: Request, res: Response) => {
-    const { userId } = req.body;
-    try {
-      const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
-      if (!user) return res.status(404).json({ error: "User not found" });
-
-      const otp = generateOTP();
-      const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
-      
-      await db.update(users).set({ otpCode: otp, otpExpiresAt }).where(eq(users.id, userId));
-      await sendOTPEmail(user.email, otp, user.name);
-      
-      return res.json({ message: "OTP resent" });
-    } catch (e) {
-      console.error("Resend OTP error:", e);
-      return res.status(500).json({ error: "Failed to resend OTP" });
     }
   });
 }

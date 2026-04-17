@@ -5,23 +5,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Award, Users, Briefcase, Loader2, Mail, ArrowLeft, RefreshCw } from "lucide-react";
+import { Award, Users, Briefcase, Loader2 } from "lucide-react";
 import { api, setSession } from "@/lib/api";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 
-type Step = "form" | "otp";
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function Landing({ onLogin }: { onLogin?: () => void }) {
   const [, setLocation] = useLocation();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
-  // Shared OTP state
-  const [step, setStep] = useState<Step>("form");
-  const [pendingUserId, setPendingUserId] = useState("");
-  const [pendingEmail, setPendingEmail] = useState("");
-  const [otp, setOtp] = useState("");
-  const [resendCooldown, setResendCooldown] = useState(0);
 
   // Sign up fields
   const [name, setName] = useState("");
@@ -49,100 +41,29 @@ export default function Landing({ onLogin }: { onLogin?: () => void }) {
     setError("");
     if (!name.trim()) { setError("Please enter your full name."); return; }
     if (!email.trim()) { setError("Please enter your email."); return; }
+    if (!EMAIL_RE.test(email.trim())) { setError("Please enter a valid email address (e.g. you@example.com)."); return; }
     if (password.length < 6) { setError("Password must be at least 6 characters."); return; }
     if (password !== confirmPassword) { setError("Passwords do not match."); return; }
     setLoading(true);
     try {
-      const res = await api.auth.signup({ name, email, password, phone, headline, company, location: userLocation });
-      setPendingUserId(res.userId);
-      setPendingEmail(email);
-      setStep("otp");
+      const user = await api.auth.signup({ name, email, password, phone, headline, company, location: userLocation });
+      enterApp(user);
     } catch (e: any) { setError(e.message || "Signup failed."); }
     finally { setLoading(false); }
-  };
-
-  // ── OTP Verify ───────────────────────────────────────────────────────────
-  const handleVerifyOtp = async () => {
-    if (otp.length !== 6) { setError("Please enter the full 6-digit code."); return; }
-    setError(""); setLoading(true);
-    try {
-      const user = await api.auth.verifyOtp(pendingUserId, otp);
-      enterApp(user);
-    } catch (e: any) { setError(e.message || "Invalid OTP."); }
-    finally { setLoading(false); }
-  };
-
-  const handleResendOtp = async () => {
-    if (resendCooldown > 0) return;
-    await api.auth.resendOtp(pendingUserId);
-    setResendCooldown(30);
-    const t = setInterval(() => setResendCooldown(c => { if (c <= 1) { clearInterval(t); return 0; } return c - 1; }), 1000);
   };
 
   // ── Sign In ──────────────────────────────────────────────────────────────
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(""); setLoading(true);
+    setError("");
+    if (!EMAIL_RE.test(loginEmail.trim())) { setError("Please enter a valid email address."); return; }
+    setLoading(true);
     try {
       const user = await api.auth.signin(loginEmail, loginPassword);
       enterApp(user);
     } catch (e: any) { setError(e.message || "Sign in failed."); }
     finally { setLoading(false); }
   };
-
-  // ── OTP Screen ───────────────────────────────────────────────────────────
-  if (step === "otp") {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary/10 to-background px-4">
-        <Card className="w-full max-w-md shadow-lg">
-          <CardHeader className="text-center">
-            <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
-              <Mail className="h-7 w-7 text-primary" />
-            </div>
-            <CardTitle>Check your email</CardTitle>
-            <CardDescription>
-              We sent a 6-digit verification code to<br />
-              <span className="font-medium text-foreground">{pendingEmail}</span>
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            <div className="flex justify-center">
-              <InputOTP maxLength={6} value={otp} onChange={setOtp}>
-                <InputOTPGroup>
-                  <InputOTPSlot index={0} />
-                  <InputOTPSlot index={1} />
-                  <InputOTPSlot index={2} />
-                  <InputOTPSlot index={3} />
-                  <InputOTPSlot index={4} />
-                  <InputOTPSlot index={5} />
-                </InputOTPGroup>
-              </InputOTP>
-            </div>
-            {error && <p className="text-sm text-destructive text-center">{error}</p>}
-            <Button className="w-full" onClick={handleVerifyOtp} disabled={loading || otp.length !== 6}>
-              {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-              Verify & Enter Chakri
-            </Button>
-            <div className="flex items-center justify-between text-sm">
-              <button onClick={() => { setStep("form"); setOtp(""); setError(""); }} className="flex items-center gap-1 text-muted-foreground hover:text-foreground">
-                <ArrowLeft className="h-3.5 w-3.5" />Back
-              </button>
-              <button onClick={handleResendOtp} disabled={resendCooldown > 0} className="flex items-center gap-1 text-primary hover:underline disabled:opacity-50">
-                <RefreshCw className="h-3.5 w-3.5" />
-                {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend code"}
-              </button>
-            </div>
-            <p className="text-xs text-center text-muted-foreground">
-              Can't find the email? Check your spam folder.<br/>
-              {!import.meta.env.VITE_RESEND_CONFIGURED && (
-                <span className="text-yellow-600">📋 Dev mode: check server logs for the OTP code.</span>
-              )}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -250,9 +171,9 @@ export default function Landing({ onLogin }: { onLogin?: () => void }) {
                         {error && <p className="text-sm text-destructive">{error}</p>}
                         <Button type="submit" className="w-full" disabled={loading}>
                           {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                          Create Account & Verify Email
+                          Create Account
                         </Button>
-                        <p className="text-xs text-center text-muted-foreground">🎁 500 Chakri Coins welcome bonus after verification!</p>
+                        <p className="text-xs text-center text-muted-foreground">🎁 500 Chakri Coins welcome bonus!</p>
                       </form>
                     </TabsContent>
                   </Tabs>
