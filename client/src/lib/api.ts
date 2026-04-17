@@ -1,14 +1,18 @@
 // Central API client — talks to Express backend which reads/writes Supabase
-// The userId is stored in localStorage after login (just the ID, not sensitive data)
+// Auth: JWT token stored in localStorage, sent as Authorization: Bearer header
 
 const BASE = "/api";
 
-function userId(): string {
-  return localStorage.getItem("chakri_user_id") || "";
+function token(): string {
+  return localStorage.getItem("chakri_token") || "";
 }
 
 function headers() {
-  return { "Content-Type": "application/json", "x-user-id": userId() };
+  const t = token();
+  return {
+    "Content-Type": "application/json",
+    ...(t ? { Authorization: `Bearer ${t}` } : {}),
+  };
 }
 
 async function get<T>(path: string): Promise<T> {
@@ -29,7 +33,7 @@ async function patch<T>(path: string, body?: any): Promise<T> {
   return r.json();
 }
 
-// ── Auth ────────────────────────────────────────────────────────────────────
+// ── API surface ─────────────────────────────────────────────────────────────
 export const api = {
   auth: {
     signup: (data: any) => post<any>("/auth/signup", data),
@@ -74,18 +78,20 @@ export const api = {
 };
 
 // ── Session helpers ─────────────────────────────────────────────────────────
-export function setSession(userId: string, user: any) {
+export function setSession(userId: string, user: any, jwtToken: string) {
   localStorage.setItem("chakri_user_id", userId);
   localStorage.setItem("chakri_user_cache", JSON.stringify(user));
+  localStorage.setItem("chakri_token", jwtToken);
 }
 export function clearSession() {
   localStorage.removeItem("chakri_user_id");
   localStorage.removeItem("chakri_user_cache");
+  localStorage.removeItem("chakri_token");
 }
 export function getCachedUser(): any | null {
   const s = localStorage.getItem("chakri_user_cache");
   return s ? JSON.parse(s) : null;
 }
 export function isLoggedIn(): boolean {
-  return !!localStorage.getItem("chakri_user_id");
+  return !!localStorage.getItem("chakri_token");
 }

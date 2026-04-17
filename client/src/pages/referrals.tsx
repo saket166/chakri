@@ -7,39 +7,50 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Plus, Clock, Building2, MapPin, CheckCircle, Send,
   User, Briefcase, Search, MessageCircle, Star, Award,
-  Upload, ThumbsUp, Link2, ArrowUp, Info, Loader2
+  Upload, ThumbsUp, Link2, ArrowUp, Info, Loader2, Bell
 } from "lucide-react";
 import { api, getCachedUser } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
 
+// ── 4 simplified role tiers ───────────────────────────────────────────────
 const ROLE_TIERS = [
-  { label: "Intern / Fresher",        cost: 100 },
-  { label: "Junior / SDE-1",          cost: 200 },
-  { label: "Senior / SDE-2 / Lead",   cost: 400 },
-  { label: "Staff / Principal",        cost: 700 },
-  { label: "Manager / EM",            cost: 1000 },
-  { label: "Senior Manager",          cost: 1500 },
-  { label: "Director",                cost: 2500 },
-  { label: "VP / SVP",                cost: 4000 },
-  { label: "CXO / Partner",           cost: 6000 },
+  {
+    label: "Software Engineer",
+    desc: "Data Engineer, Data Scientist, SDE, Software Engineer",
+    cost: 200,
+  },
+  {
+    label: "Senior Software Engineer",
+    desc: "Senior SDE, Tech Lead, Senior Engineer, Principal Engineer",
+    cost: 300,
+  },
+  {
+    label: "Staff Level",
+    desc: "Staff Engineer, Principal, Architect, Distinguished Engineer",
+    cost: 500,
+  },
+  {
+    label: "Managerial",
+    desc: "Engineering Manager, Senior Manager, Director, VP, SVP, CXO",
+    cost: 1000,
+  },
 ];
 
 function costForRole(position: string): number {
   const lower = position.toLowerCase();
-  if (["intern","fresher","trainee","graduate"].some(k => lower.includes(k))) return 100;
-  if (["junior","sde-1","sde1","analyst"].some(k => lower.includes(k))) return 200;
-  if (["senior","sde-2","sde2","lead","specialist"].some(k => lower.includes(k))) return 400;
-  if (["staff","principal","architect","sde-3","sde3"].some(k => lower.includes(k))) return 700;
-  if (["manager","engineering manager"].some(k => lower.includes(k))) return 1000;
-  if (["senior manager","sr. manager"].some(k => lower.includes(k))) return 1500;
-  if (["director"].some(k => lower.includes(k))) return 2500;
-  if (["vp","svp","vice president"].some(k => lower.includes(k))) return 4000;
-  if (["ceo","cto","coo","cfo","chief","partner"].some(k => lower.includes(k))) return 6000;
-  return 300;
+  // Managerial — check first (director/VP/CXO must not fall through to senior)
+  if (["manager","director","vp ","svp","vice president","ceo","cto","coo","cfo","chief","partner"].some(k => lower.includes(k))) return 1000;
+  // Staff level
+  if (["staff","principal","architect","distinguished"].some(k => lower.includes(k))) return 500;
+  // Senior
+  if (["senior","lead","sr.","sr "].some(k => lower.includes(k))) return 300;
+  // Default: Software Engineer tier
+  return 200;
 }
 
 // ─── Countdown ────────────────────────────────────────────────────────────────
@@ -254,6 +265,46 @@ export default function Referrals() {
   const [coverLetter, setCoverLetter] = useState("");
   const [estimatedCost, setEstimatedCost] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [notifOpen, setNotifOpen] = useState(false);
+
+  // Poll notifications every 30s
+  useEffect(() => {
+    const fetchNotifs = () =>
+      api.users.search("").catch(() => {});
+    // Use the notifications endpoint directly
+    const loadNotifs = () =>
+      fetch("/api/notifications", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("chakri_token") || ""}`,
+        },
+      })
+        .then(r => r.json())
+        .then(data => {
+          if (Array.isArray(data)) {
+            // Only show referral-related notifications
+            setNotifications(data.filter((n: any) =>
+              ["referral_accepted", "referral_confirmed", "connection_request"].includes(n.type)
+            ));
+          }
+        })
+        .catch(() => {});
+    loadNotifs();
+    const t = setInterval(loadNotifs, 30000);
+    return () => clearInterval(t);
+  }, []);
+
+  const unreadCount = notifications.filter((n: any) => !n.read).length;
+
+  const markAllRead = () => {
+    fetch("/api/notifications/mark-read", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("chakri_token") || ""}`,
+      },
+    }).catch(() => {});
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  };
 
   const reload = async () => {
     const [reqs, user] = await Promise.all([
@@ -321,6 +372,34 @@ export default function Referrals() {
           <span className="text-sm text-muted-foreground flex items-center gap-1">
             <Award className="h-4 w-4 text-yellow-500" />{(me?.points || 0).toLocaleString()} coins
           </span>
+
+          {/* Notification Bell */}
+          <Popover open={notifOpen} onOpenChange={(open) => { setNotifOpen(open); if (open) markAllRead(); }}>
+            <PopoverTrigger asChild>
+              <button className="relative p-2 rounded-full hover:bg-muted/60 transition-colors">
+                <Bell className="h-5 w-5" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-1 right-1 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-background" />
+                )}
+              </button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-80 p-0">
+              <div className="px-4 py-3 border-b">
+                <p className="font-semibold text-sm">Referral Notifications</p>
+              </div>
+              <div className="max-h-72 overflow-y-auto divide-y">
+                {notifications.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-8">No notifications yet</p>
+                ) : notifications.map((n: any) => (
+                  <div key={n.id} className={`px-4 py-3 text-sm ${!n.read ? "bg-primary/5" : ""}`}>
+                    <p className="font-medium">{n.title}</p>
+                    <p className="text-muted-foreground text-xs mt-0.5">{n.body}</p>
+                  </div>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
+
           <Button onClick={() => setShowNewDialog(true)}>
             <Plus className="h-4 w-4 mr-2" />Ask for Referral
           </Button>
@@ -470,11 +549,14 @@ export default function Referrals() {
             </div>
             <div className="border rounded-lg overflow-hidden text-xs">
               <div className="bg-muted/50 px-3 py-1.5 font-medium">Coin Cost by Role</div>
-              <div className="divide-y max-h-36 overflow-y-auto">
+              <div className="divide-y">
                 {ROLE_TIERS.map(t => (
-                  <div key={t.label} className="flex justify-between px-3 py-1.5">
-                    <span className="text-muted-foreground">{t.label}</span>
-                    <span className="font-medium flex items-center gap-1"><Award className="h-3 w-3 text-yellow-500" />{t.cost}</span>
+                  <div key={t.label} className="flex justify-between items-start px-3 py-2 gap-3">
+                    <div>
+                      <p className="font-medium">{t.label}</p>
+                      <p className="text-muted-foreground text-[11px] mt-0.5">{t.desc}</p>
+                    </div>
+                    <span className="font-medium flex items-center gap-1 shrink-0"><Award className="h-3 w-3 text-yellow-500" />{t.cost}</span>
                   </div>
                 ))}
               </div>

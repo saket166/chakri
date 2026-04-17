@@ -29,8 +29,9 @@ export default function Landing({ onLogin }: { onLogin?: () => void }) {
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
 
-  const enterApp = (user: any) => {
-    setSession(user.id, user);
+  const enterApp = (userWithToken: any) => {
+    const { token, ...user } = userWithToken;
+    setSession(user.id, user, token);
     onLogin?.();
     setLocation("/home");
   };

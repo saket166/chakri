@@ -10,9 +10,10 @@ import { Settings, Bell, Shield, Trash2, HelpCircle, FileText, AlertTriangle } f
 import { api, getCachedUser, clearSession } from "@/lib/api";
 
 async function deleteMe(): Promise<void> {
+  const tok = localStorage.getItem("chakri_token") || "";
   const r = await fetch("/api/users/me", {
     method: "DELETE",
-    headers: { "x-user-id": localStorage.getItem("chakri_user_id") || "" },
+    headers: { Authorization: `Bearer ${tok}` },
   });
   if (!r.ok) throw new Error((await r.json()).error || "Delete failed");
 }

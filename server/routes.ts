@@ -4,29 +4,31 @@ import { db } from "./db";
 import { users, referralRequests, feedItems, recommendations, directMessages, chatMessages, notifications, connectionRequests } from "@shared/schema";
 import { eq, and, or, ilike, desc, sql, inArray, ne } from "drizzle-orm";
 import { registerAuthRoutes } from "./auth";
+import jwt from "jsonwebtoken";
+
+const JWT_SECRET = process.env.JWT_SECRET || "chakri-dev-secret-change-in-prod";
 
 function getUser(req: Request): string | null {
-  return (req.headers["x-user-id"] as string) || null;
+  const auth = req.headers["authorization"];
+  if (!auth || !auth.startsWith("Bearer ")) return null;
+  try {
+    const payload = jwt.verify(auth.slice(7), JWT_SECRET) as { userId: string };
+    return payload.userId || null;
+  } catch {
+    return null; // expired or tampered token
+  }
 }
-
-const ROLE_COSTS = [
-  { keywords: ["intern","fresher","trainee","graduate"],        cost: 100 },
-  { keywords: ["junior","sde-1","sde1","analyst"],              cost: 200 },
-  { keywords: ["senior","sde-2","sde2","lead","specialist"],    cost: 400 },
-  { keywords: ["staff","principal","architect","sde-3","sde3"], cost: 700 },
-  { keywords: ["manager","engineering manager"],                 cost: 1000 },
-  { keywords: ["senior manager","sr. manager"],                  cost: 1500 },
-  { keywords: ["director"],                                      cost: 2500 },
-  { keywords: ["vp","svp","vice president"],                     cost: 4000 },
-  { keywords: ["ceo","cto","coo","cfo","chief","partner"],       cost: 6000 },
-];
 
 function costForRole(position: string): number {
   const lower = position.toLowerCase();
-  for (const tier of ROLE_COSTS) {
-    if (tier.keywords.some(k => lower.includes(k))) return tier.cost;
-  }
-  return 300;
+  // Managerial — check first so director/VP/CXO don't fall through to senior
+  if (["manager","director","vp ","svp","vice president","ceo","cto","coo","cfo","chief","partner"].some(k => lower.includes(k))) return 1000;
+  // Staff level
+  if (["staff","principal","architect","distinguished"].some(k => lower.includes(k))) return 500;
+  // Senior
+  if (["senior","lead","sr.","sr "].some(k => lower.includes(k))) return 300;
+  // Default: Software Engineer tier
+  return 200;
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
