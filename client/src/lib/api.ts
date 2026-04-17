@@ -48,6 +48,7 @@ export const api = {
     connectSent: () => get<string[]>("/users/connect-sent"),
     connections: () => get<any[]>("/users/connections"),
     recommendations: (userId: string) => get<any[]>(`/recommendations/${userId}`),
+    companyStats: () => get<{ company: string; count: number }[]>("/users/company-stats"),
   },
   requests: {
     list: () => get<any[]>("/requests"),

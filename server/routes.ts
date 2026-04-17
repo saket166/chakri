@@ -320,6 +320,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return res.json({ queuePosition: newPos });
   });
 
+  // ── Company Stats (for bar chart) ─────────────────────────────────────────
+
+  app.get("/api/users/company-stats", async (_req: Request, res: Response) => {
+    const rows = await db
+      .select({ company: users.company, count: sql<number>`cast(count(*) as int)` })
+      .from(users)
+      .where(and(sql`${users.company} != ''`, sql`${users.company} is not null`, eq(users.emailVerified, true)))
+      .groupBy(users.company)
+      .orderBy(desc(sql`count(*)`))
+      .limit(10);
+    return res.json(rows);
+  });
+
   // ── Feed ───────────────────────────────────────────────────────────────────
 
   app.get("/api/feed", async (_req: Request, res: Response) => {

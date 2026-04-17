@@ -142,10 +142,13 @@ export function registerAuthRoutes(app: Express) {
         .where(eq(users.id, userId))
         .returning();
 
-      // Social trigger: New member joined feed
+      // Social trigger: New member joined feed (company-based, anonymous)
+      const feedText = verified.company
+        ? `Someone from ${verified.company} just joined Chakri! 👋`
+        : `A new professional just joined Chakri! 👋`;
       await db.insert(feedItems).values({ 
         type: "new_member", 
-        text: `${verified.name} just joined Chakri! 👋` 
+        text: feedText,
       }).catch((err) => { console.error("Feed insert error:", err) });
 
       const { passwordHash, otpCode, ...safeUser } = verified;
