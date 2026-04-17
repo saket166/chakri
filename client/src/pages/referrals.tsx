@@ -7,11 +7,10 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Plus, Clock, Building2, MapPin, CheckCircle, Send,
   User, Briefcase, Search, MessageCircle, Star, Award,
-  Upload, ThumbsUp, Link2, ArrowUp, Info, Loader2, Bell
+  Upload, ThumbsUp, Link2, ArrowUp, Info, Loader2, AlertTriangle
 } from "lucide-react";
 import { api, getCachedUser } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
@@ -265,46 +264,28 @@ export default function Referrals() {
   const [coverLetter, setCoverLetter] = useState("");
   const [estimatedCost, setEstimatedCost] = useState(0);
   const [submitting, setSubmitting] = useState(false);
-  const [notifications, setNotifications] = useState<any[]>([]);
-  const [notifOpen, setNotifOpen] = useState(false);
+  const [companyWarning, setCompanyWarning] = useState<string | null>(null);
 
-  // Poll notifications every 30s
+  // Check if anyone at target company is on Chakri
   useEffect(() => {
-    const fetchNotifs = () =>
-      api.users.search("").catch(() => {});
-    // Use the notifications endpoint directly
-    const loadNotifs = () =>
-      fetch("/api/notifications", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("chakri_token") || ""}`,
-        },
+    const company = form.targetCompany.trim();
+    if (!company) { setCompanyWarning(null); return; }
+    const timer = setTimeout(() => {
+      fetch(`/api/companies/exists?name=${encodeURIComponent(company)}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("chakri_token") || ""}` },
       })
         .then(r => r.json())
-        .then(data => {
-          if (Array.isArray(data)) {
-            // Only show referral-related notifications
-            setNotifications(data.filter((n: any) =>
-              ["referral_accepted", "referral_confirmed", "connection_request"].includes(n.type)
-            ));
+        .then(({ exists, count }) => {
+          if (!exists) {
+            setCompanyWarning(`No one from ${company} is on Chakri yet. Your request will be posted, but may take longer to get a referral.`);
+          } else {
+            setCompanyWarning(null);
           }
         })
-        .catch(() => {});
-    loadNotifs();
-    const t = setInterval(loadNotifs, 30000);
-    return () => clearInterval(t);
-  }, []);
-
-  const unreadCount = notifications.filter((n: any) => !n.read).length;
-
-  const markAllRead = () => {
-    fetch("/api/notifications/mark-read", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("chakri_token") || ""}`,
-      },
-    }).catch(() => {});
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-  };
+        .catch(() => setCompanyWarning(null));
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [form.targetCompany]);
 
   const reload = async () => {
     const [reqs, user] = await Promise.all([
@@ -372,34 +353,6 @@ export default function Referrals() {
           <span className="text-sm text-muted-foreground flex items-center gap-1">
             <Award className="h-4 w-4 text-yellow-500" />{(me?.points || 0).toLocaleString()} coins
           </span>
-
-          {/* Notification Bell */}
-          <Popover open={notifOpen} onOpenChange={(open) => { setNotifOpen(open); if (open) markAllRead(); }}>
-            <PopoverTrigger asChild>
-              <button className="relative p-2 rounded-full hover:bg-muted/60 transition-colors">
-                <Bell className="h-5 w-5" />
-                {unreadCount > 0 && (
-                  <span className="absolute top-1 right-1 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-background" />
-                )}
-              </button>
-            </PopoverTrigger>
-            <PopoverContent align="end" className="w-80 p-0">
-              <div className="px-4 py-3 border-b">
-                <p className="font-semibold text-sm">Referral Notifications</p>
-              </div>
-              <div className="max-h-72 overflow-y-auto divide-y">
-                {notifications.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-8">No notifications yet</p>
-                ) : notifications.map((n: any) => (
-                  <div key={n.id} className={`px-4 py-3 text-sm ${!n.read ? "bg-primary/5" : ""}`}>
-                    <p className="font-medium">{n.title}</p>
-                    <p className="text-muted-foreground text-xs mt-0.5">{n.body}</p>
-                  </div>
-                ))}
-              </div>
-            </PopoverContent>
-          </Popover>
-
           <Button onClick={() => setShowNewDialog(true)}>
             <Plus className="h-4 w-4 mr-2" />Ask for Referral
           </Button>
@@ -501,6 +454,12 @@ export default function Referrals() {
               <Label>Target Company *</Label>
               <Input placeholder="e.g. Google, Microsoft"
                 value={form.targetCompany} onChange={e => setForm(p => ({ ...p, targetCompany: e.target.value }))} />
+              {companyWarning && (
+                <div className="mt-1.5 flex items-start gap-2 text-xs text-amber-700 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 rounded-md px-3 py-2">
+                  <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0 text-amber-500" />
+                  <span>{companyWarning}</span>
+                </div>
+              )}
             </div>
             <div>
               <Label>Role / Position *</Label>

@@ -368,25 +368,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return res.json({ queuePosition: newPos });
   });
 
-  // ── Company Stats (for bar chart) ─────────────────────────────────────────
+  // ── Company Stats (case-insensitive grouping for bar chart) ─────────────────
 
   app.get("/api/users/company-stats", async (_req: Request, res: Response) => {
     const rows = await db
-      .select({ company: users.company, count: sql<number>`cast(count(*) as int)` })
+      .select({
+        company: sql<string>`MAX(${users.company})`,
+        count: sql<number>`CAST(COUNT(*) AS INT)`,
+      })
       .from(users)
-      .where(and(sql`${users.company} != ''`, sql`${users.company} is not null`, eq(users.emailVerified, true)))
-      .groupBy(users.company)
-      .orderBy(desc(sql`count(*)`))
+      .where(and(sql`${users.company} != ''`, sql`${users.company} IS NOT NULL`, eq(users.emailVerified, true)))
+      .groupBy(sql`LOWER(${users.company})`)
+      .orderBy(desc(sql`COUNT(*)`))
       .limit(10);
     return res.json(rows);
   });
 
-  // ── Feed ───────────────────────────────────────────────────────────────────
+  // ── Company existence check (for referral warning) ─────────────────────────
+
+  app.get("/api/companies/exists", async (req: Request, res: Response) => {
+    const name = (req.query.name as string || "").trim();
+    if (!name) return res.json({ exists: false, count: 0 });
+    const [row] = await db
+      .select({ count: sql<number>`CAST(COUNT(*) AS INT)` })
+      .from(users)
+      .where(and(ilike(users.company, name), eq(users.emailVerified, true)));
+    return res.json({ exists: (row?.count ?? 0) > 0, count: row?.count ?? 0 });
+  });
+
+  // ── Feed (randomised with recency weight, no new_member) ───────────────────
 
   app.get("/api/feed", async (_req: Request, res: Response) => {
     const items = await db.select().from(feedItems)
-      .where(sql`type != 'new_member'`)
-      .orderBy(desc(feedItems.createdAt)).limit(50);
+      .where(sql`${feedItems.type} != 'new_member'`)
+      .orderBy(sql`(${feedItems.createdAt} + RANDOM() * INTERVAL '2 hours') DESC`)
+      .limit(30);
     return res.json(items);
   });
 

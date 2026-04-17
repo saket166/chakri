@@ -10,7 +10,7 @@ import { api, clearSession, getCachedUser } from "@/lib/api";
 const menuItems = [
   { title: "Home",            url: "/home",        icon: Home },
   { title: "Search People",   url: "/search",      icon: Search },
-  { title: "Referral Center", url: "/referrals",   icon: Briefcase },
+  { title: "Referral Center", url: "/referrals",   icon: Briefcase, notif: true },
   { title: "Connections",     url: "/connections",  icon: Users },
   { title: "Messages",        url: "/messages",     icon: MessageCircle },
   { title: "Marketplace",     url: "/marketplace",  icon: ShoppingBag },
@@ -20,8 +20,28 @@ const menuItems = [
 export function AppSidebar({ onLogout }: { onLogout?: () => void }) {
   const [location, setLocation] = useLocation();
   const [user, setUser] = useState<any>(getCachedUser() || {});
+  const [unreadNotifCount, setUnreadNotifCount] = useState(0);
 
   useEffect(() => { api.auth.me().then(setUser).catch(() => {}); }, []);
+
+  // Poll for unread notifications (referral-related only)
+  useEffect(() => {
+    const load = () =>
+      fetch("/api/notifications", {
+        headers: { Authorization: `Bearer ${localStorage.getItem("chakri_token") || ""}` },
+      })
+        .then(r => r.ok ? r.json() : [])
+        .then((data: any[]) => {
+          if (!Array.isArray(data)) return;
+          const referralTypes = ["referral_accepted", "referral_confirmed", "connection_request"];
+          const unread = data.filter(n => !n.read && referralTypes.includes(n.type)).length;
+          setUnreadNotifCount(unread);
+        })
+        .catch(() => {});
+    load();
+    const t = setInterval(load, 30000);
+    return () => clearInterval(t);
+  }, []);
 
   const handleLogout = () => { clearSession(); onLogout?.(); setLocation("/"); };
 
@@ -49,6 +69,11 @@ export function AppSidebar({ onLogout }: { onLogout?: () => void }) {
                     <Link href={item.url} className="flex items-center gap-2 w-full">
                       <item.icon className="h-4 w-4 shrink-0" />
                       <span className="flex-1">{item.title}</span>
+                      {item.notif && unreadNotifCount > 0 && (
+                        <span className="h-5 min-w-5 px-1 rounded-full bg-red-500 text-white text-[11px] font-bold flex items-center justify-center">
+                          {unreadNotifCount > 9 ? "9+" : unreadNotifCount}
+                        </span>
+                      )}
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

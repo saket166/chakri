@@ -70,13 +70,6 @@ export function registerAuthRoutes(app: Express) {
         user = created;
       }
 
-      // Social feed: new member joined (company-based, anonymous)
-      const feedText = user.company
-        ? `Someone from ${user.company} just joined Chakri! 👋`
-        : `A new professional just joined Chakri! 👋`;
-      await db.insert(feedItems).values({ type: "new_member", text: feedText })
-        .catch((err) => { console.error("Feed insert error:", err); });
-
       const { passwordHash: _ph, otpCode: _otp, ...safeUser } = user;
       const token = signToken(user.id);
       return res.json({ token, ...safeUser });
