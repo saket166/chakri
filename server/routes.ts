@@ -56,7 +56,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const userId = getUser(req);
     if (!userId) return res.status(401).json({ error: "Unauthorized" });
     try {
+      // 1. Find all referral requests owned by or accepted by this user
+      //    (needed to clean up child tables that reference referral_requests)
+      const myRequests = await db
+        .select({ id: referralRequests.id })
+        .from(referralRequests)
+        .where(or(eq(referralRequests.requesterId, userId), eq(referralRequests.acceptedById, userId)));
+      const myRequestIds = myRequests.map(r => r.id);
+
+      // 2. Delete recommendations linked to those requests (or written by/for this user)
+      if (myRequestIds.length > 0) {
+        await db.delete(recommendations).where(inArray(recommendations.requestId, myRequestIds));
+      }
+      await db.delete(recommendations).where(or(eq(recommendations.fromId, userId), eq(recommendations.forId, userId)));
+
+      // 3. Delete chat messages linked to those requests (or sent by this user)
+      if (myRequestIds.length > 0) {
+        await db.delete(chatMessages).where(inArray(chatMessages.requestId, myRequestIds));
+      }
+      await db.delete(chatMessages).where(eq(chatMessages.senderId, userId));
+
+      // 4. Delete notifications for this user
+      await db.delete(notifications).where(eq(notifications.userId, userId));
+
+      // 5. Delete direct messages sent to or from this user
+      await db.delete(directMessages).where(or(eq(directMessages.fromId, userId), eq(directMessages.toId, userId)));
+
+      // 6. Delete connection requests involving this user
+      await db.delete(connectionRequests).where(or(eq(connectionRequests.fromId, userId), eq(connectionRequests.toId, userId)));
+
+      // 7. Delete referral requests owned by or accepted by this user
+      await db.delete(referralRequests).where(or(eq(referralRequests.requesterId, userId), eq(referralRequests.acceptedById, userId)));
+
+      // 8. Finally delete the user
       await db.delete(users).where(eq(users.id, userId));
+
       return res.json({ ok: true });
     } catch (e: any) {
       console.error("Delete account error:", e);
