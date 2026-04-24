@@ -25,13 +25,33 @@ import ForgotPassword from "@/pages/forgot-password";
 import ResetPassword from "@/pages/reset-password";
 import NotFound from "@/pages/not-found";
 import NotificationsPage from "@/pages/notifications";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { isLoggedIn } from "@/lib/api";
 
 function AppLayout() {
   const [location] = useLocation();
   const [loggedIn, setLoggedIn] = useState(isLoggedIn());
+  const [unreadCount, setUnreadCount] = useState(0);
   (window as any).__setAppLoggedIn = setLoggedIn;
+
+  // Poll for total unread notifications to badge the bell
+  useEffect(() => {
+    if (!loggedIn) return;
+    const load = () => {
+      const tok = localStorage.getItem("chakri_token") || "";
+      if (!tok) return;
+      fetch("/api/notifications", { headers: { Authorization: `Bearer ${tok}` } })
+        .then(r => r.ok ? r.json() : [])
+        .then((data: any[]) => {
+          if (!Array.isArray(data)) return;
+          setUnreadCount(data.filter(n => !n.read).length);
+        })
+        .catch(() => {});
+    };
+    load();
+    const t = setInterval(load, 30000);
+    return () => clearInterval(t);
+  }, [loggedIn]);
 
   if (!loggedIn || location === "/") {
     if (location === "/forgot-password") return <ForgotPassword />;
@@ -49,6 +69,11 @@ function AppLayout() {
             <div className="flex items-center gap-2">
               <a href="/notifications" className="relative p-2 rounded-md hover:bg-muted transition-colors">
                 <Bell className="h-5 w-5 text-muted-foreground" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-1 right-1 h-4 min-w-4 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center px-0.5 leading-none">
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                )}
               </a>
               <ThemeToggle />
             </div>

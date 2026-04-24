@@ -121,8 +121,8 @@ function TempChat({ requestId, me }: { requestId: string; me: any }) {
 }
 
 // ─── Request Card ─────────────────────────────────────────────────────────────
-function RequestCard({ req, me, onRefresh, showAccept }: {
-  req: any; me: any; onRefresh: () => void; showAccept?: boolean;
+function RequestCard({ req, me, onRefresh, showAccept, refereeAtCapacity }: {
+  req: any; me: any; onRefresh: () => void; showAccept?: boolean; refereeAtCapacity?: boolean;
 }) {
   const { toast } = useToast();
   const isMyRequest = req.requesterId === me?.id;
@@ -219,10 +219,16 @@ function RequestCard({ req, me, onRefresh, showAccept }: {
 
             {/* Accept button for "Refer Someone" tab */}
             {showAccept && req.status === "open" && !isMyRequest && (
-              <Button size="sm" onClick={handleAccept} disabled={loading}>
-                {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <CheckCircle className="h-3.5 w-3.5 mr-1" />}
-                Accept & Refer
-              </Button>
+              <div className="flex flex-col items-end gap-1">
+                <Button size="sm" onClick={handleAccept} disabled={loading || !!refereeAtCapacity}
+                  title={refereeAtCapacity ? "You're already referring 3 people" : undefined}>
+                  {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <CheckCircle className="h-3.5 w-3.5 mr-1" />}
+                  {refereeAtCapacity ? "At capacity (3/3)" : "Accept & Refer"}
+                </Button>
+                {refereeAtCapacity && (
+                  <p className="text-[11px] text-amber-600 dark:text-amber-400">Complete an existing referral first</p>
+                )}
+              </div>
             )}
 
             {/* Referee: mark referred */}
@@ -444,8 +450,18 @@ export default function Referrals() {
               <p className="text-sm mt-1">Check back later or ask colleagues to sign up</p>
             </CardContent></Card>
           )}
+          {inProgress.length >= 3 && (
+            <Card className="border-amber-300 bg-amber-50 dark:bg-amber-950/20">
+              <CardContent className="p-4 flex items-center gap-3">
+                <Info className="h-5 w-5 text-amber-600 shrink-0" />
+                <p className="text-sm text-amber-700 dark:text-amber-400">
+                  You're already referring <strong>3 people</strong> — the maximum allowed at one time. Complete an existing referral before accepting new ones.
+                </p>
+              </CardContent>
+            </Card>
+          )}
           {referSomeone.map(req => (
-            <RequestCard key={req.id} req={req} me={me} onRefresh={reload} showAccept />
+            <RequestCard key={req.id} req={req} me={me} onRefresh={reload} showAccept refereeAtCapacity={inProgress.length >= 3} />
           ))}
         </TabsContent>
 

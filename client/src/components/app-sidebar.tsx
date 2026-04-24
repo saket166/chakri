@@ -11,7 +11,7 @@ const menuItems = [
   { title: "Home",            url: "/home",        icon: Home },
   { title: "Search People",   url: "/search",      icon: Search },
   { title: "Referral Center", url: "/referrals",   icon: Briefcase, notif: true },
-  { title: "Connections",     url: "/connections",  icon: Users },
+  { title: "Connections",     url: "/connections",  icon: Users, connReq: true },
   { title: "Messages",        url: "/messages",     icon: MessageCircle },
   { title: "Marketplace",     url: "/marketplace",  icon: ShoppingBag },
   { title: "Profile",         url: "/profile",      icon: User },
@@ -21,6 +21,7 @@ export function AppSidebar({ onLogout }: { onLogout?: () => void }) {
   const [location, setLocation] = useLocation();
   const [user, setUser] = useState<any>(getCachedUser() || {});
   const [unreadNotifCount, setUnreadNotifCount] = useState(0);
+  const [connReqCount, setConnReqCount] = useState(0);
 
   useEffect(() => { api.auth.me().then(setUser).catch(() => {}); }, []);
 
@@ -38,6 +39,20 @@ export function AppSidebar({ onLogout }: { onLogout?: () => void }) {
           const unread = data.filter(n => !n.read && referralTypes.includes(n.type)).length;
           setUnreadNotifCount(unread);
         })
+        .catch(() => {});
+    load();
+    const t = setInterval(load, 30000);
+    return () => clearInterval(t);
+  }, []);
+
+  // Poll for pending connection requests → badge on Connections
+  useEffect(() => {
+    const load = () =>
+      fetch("/api/users/connect-requests", {
+        headers: { Authorization: `Bearer ${localStorage.getItem("chakri_token") || ""}` },
+      })
+        .then(r => r.ok ? r.json() : [])
+        .then((data: any[]) => setConnReqCount(Array.isArray(data) ? data.length : 0))
         .catch(() => {});
     load();
     const t = setInterval(load, 30000);
@@ -73,6 +88,11 @@ export function AppSidebar({ onLogout }: { onLogout?: () => void }) {
                       {item.notif && unreadNotifCount > 0 && (
                         <span className="h-5 min-w-5 px-1 rounded-full bg-red-500 text-white text-[11px] font-bold flex items-center justify-center">
                           {unreadNotifCount > 9 ? "9+" : unreadNotifCount}
+                        </span>
+                      )}
+                      {item.connReq && connReqCount > 0 && (
+                        <span className="h-5 min-w-5 px-1 rounded-full bg-blue-500 text-white text-[11px] font-bold flex items-center justify-center">
+                          {connReqCount > 9 ? "9+" : connReqCount}
                         </span>
                       )}
                     </Link>

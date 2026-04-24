@@ -157,11 +157,12 @@ export default function Profile() {
       </Card>
 
       <Tabs defaultValue="experience">
-        <TabsList className="mb-4 grid grid-cols-4 w-full">
+        <TabsList className="mb-4 grid grid-cols-5 w-full">
           <TabsTrigger value="experience"><Briefcase className="h-3.5 w-3.5 mr-1 hidden sm:inline" />Experience</TabsTrigger>
           <TabsTrigger value="education"><GraduationCap className="h-3.5 w-3.5 mr-1 hidden sm:inline" />Education</TabsTrigger>
           <TabsTrigger value="skills">Skills</TabsTrigger>
           <TabsTrigger value="certifications"><FileText className="h-3.5 w-3.5 mr-1 hidden sm:inline" />Certs</TabsTrigger>
+          <TabsTrigger value="recommendations">Reviews {recs.length > 0 && <span className="ml-1 text-[10px] bg-primary/15 text-primary rounded-full px-1.5 py-0.5 font-bold">{recs.length}</span>}</TabsTrigger>
         </TabsList>
 
         {/* Experience */}

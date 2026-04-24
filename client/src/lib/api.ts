@@ -15,20 +15,32 @@ function headers() {
   };
 }
 
+/** Auto-logout if server returns 401 (expired / invalid token) */
+function handle401() {
+  localStorage.removeItem("chakri_user_id");
+  localStorage.removeItem("chakri_user_cache");
+  localStorage.removeItem("chakri_token");
+  // Trigger app re-render via the global hook set in App.tsx
+  (window as any).__setAppLoggedIn?.(false);
+}
+
 async function get<T>(path: string): Promise<T> {
   const r = await fetch(`${BASE}${path}`, { headers: headers() });
+  if (r.status === 401) { handle401(); throw new Error("Session expired. Please sign in again."); }
   if (!r.ok) throw new Error(await r.text());
   return r.json();
 }
 
 async function post<T>(path: string, body?: any): Promise<T> {
   const r = await fetch(`${BASE}${path}`, { method: "POST", headers: headers(), body: JSON.stringify(body) });
+  if (r.status === 401) { handle401(); throw new Error("Session expired. Please sign in again."); }
   if (!r.ok) throw new Error(await r.text());
   return r.json();
 }
 
 async function patch<T>(path: string, body?: any): Promise<T> {
   const r = await fetch(`${BASE}${path}`, { method: "PATCH", headers: headers(), body: JSON.stringify(body) });
+  if (r.status === 401) { handle401(); throw new Error("Session expired. Please sign in again."); }
   if (!r.ok) throw new Error(await r.text());
   return r.json();
 }
@@ -43,6 +55,8 @@ export const api = {
     forgotPassword: (email: string) => post<any>("/auth/forgot-password", { email }),
     resetPassword: (token: string, email: string, newPassword: string) =>
       post<any>("/auth/reset-password", { token, email, newPassword }),
+    changePassword: (currentPassword: string, newPassword: string) =>
+      post<any>("/auth/change-password", { currentPassword, newPassword }),
     me: () => get<any>("/users/me"),
     update: (data: any) => patch<any>("/users/me", data),
   },
