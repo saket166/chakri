@@ -183,14 +183,18 @@ export default function Landing({ onLogin }: { onLogin?: () => void }) {
                 <p className="text-xl text-muted-foreground">
                   Connect with professionals, request referrals, and earn Chakri coins by helping others land their dream jobs.
                 </p>
-                <div className="grid grid-cols-2 gap-4 pt-4">
+                <div className="grid grid-cols-1 gap-3 pt-4">
                   <div className="flex items-center gap-3">
-                    <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center"><Users className="h-6 w-6 text-primary" /></div>
-                    <div><p className="font-semibold">10K+ Users</p><p className="text-sm text-muted-foreground">Active network</p></div>
+                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0"><Users className="h-5 w-5 text-primary" /></div>
+                    <p className="text-sm text-muted-foreground">Connect with employees at your target companies and ask for a referral directly</p>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center"><Briefcase className="h-6 w-6 text-primary" /></div>
-                    <div><p className="font-semibold">5K+ Referrals</p><p className="text-sm text-muted-foreground">Success stories</p></div>
+                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0"><Briefcase className="h-5 w-5 text-primary" /></div>
+                    <p className="text-sm text-muted-foreground">Post referral requests — pay only when someone accepts and refers you</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0"><Award className="h-5 w-5 text-primary" /></div>
+                    <p className="text-sm text-muted-foreground">Earn Chakri Coins for every successful referral you give — redeem in the marketplace</p>
                   </div>
                 </div>
               </div>
