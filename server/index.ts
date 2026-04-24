@@ -3,6 +3,12 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import rateLimit from "express-rate-limit";
 
+// ── Safety guard ─────────────────────────────────────────────────────────────
+if (process.env.NODE_ENV === "production" && !process.env.JWT_SECRET) {
+  console.error("FATAL: JWT_SECRET environment variable is not set. Refusing to start in production.");
+  process.exit(1);
+}
+
 const app = express();
 
 declare module 'http' {

@@ -199,7 +199,18 @@ function RequestCard({ req, me, onRefresh, showAccept }: {
             </div>
             {req.message && <p className="text-xs mt-1 italic text-muted-foreground">"{req.message}"</p>}
             {req.acceptedByName && req.status !== "completed" && (
-              <p className="text-xs mt-1 text-blue-600 font-medium">Accepted by: {req.acceptedByName}</p>
+              <p className="text-xs mt-1 text-blue-600 dark:text-blue-400 font-medium">Accepted by: {req.acceptedByName}</p>
+            )}
+            {/* Show resume link to referee so they have what they need to make the referral */}
+            {isAcceptedByMe && req.resumeUrl && (
+              <a
+                href={req.resumeUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs mt-1.5 inline-flex items-center gap-1 text-primary hover:underline font-medium"
+              >
+                📄 View Resume
+              </a>
             )}
           </div>
 

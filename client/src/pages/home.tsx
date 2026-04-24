@@ -1,17 +1,15 @@
 import { useEffect, useState } from "react";
 import { api, getCachedUser } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Award, Briefcase, Users, Zap, Building2, ArrowRight, Search } from "lucide-react";
+import { Award, Briefcase, Users, Zap, Building2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { useLocation } from "wouter";
+import { Link } from "wouter";
 
 export default function Home() {
   const [feed, setFeed] = useState<any[]>([]);
   const [user, setUser] = useState<any>(getCachedUser());
   const [companyStats, setCompanyStats] = useState<{ company: string; count: number }[]>([]);
   const [loading, setLoading] = useState(true);
-  const [, setLocation] = useLocation();
 
   useEffect(() => {
     Promise.all([
@@ -53,22 +51,16 @@ export default function Home() {
   return (
     <div className="container mx-auto px-4 py-6 max-w-5xl">
 
-      {/* ── Welcome banner ── */}
-      <div className="rounded-xl bg-gradient-to-r from-primary/15 via-primary/8 to-transparent border border-primary/15 p-5 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <p className="text-xs font-medium text-primary uppercase tracking-wider mb-0.5">Welcome back</p>
-          <h1 className="text-2xl font-bold">{firstName} 👋</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            {user?.headline || "Complete your profile to get started"}
-          </p>
+      {/* ── Welcome strip ── */}
+      <div className="flex items-center gap-3 mb-6 px-1">
+        <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+          <span className="text-sm font-bold text-primary">
+            {firstName[0]?.toUpperCase()}
+          </span>
         </div>
-        <div className="flex gap-2 shrink-0">
-          <Button size="sm" variant="outline" onClick={() => setLocation("/search")}>
-            <Search className="h-3.5 w-3.5 mr-1.5" />Find People
-          </Button>
-          <Button size="sm" onClick={() => setLocation("/referrals")}>
-            <Briefcase className="h-3.5 w-3.5 mr-1.5" />Referral Center
-          </Button>
+        <div>
+          <p className="font-semibold text-base leading-tight">Welcome back, {firstName} 👋</p>
+          <p className="text-xs text-muted-foreground">{user?.headline || "Complete your profile to get started"}</p>
         </div>
       </div>
 
@@ -98,12 +90,6 @@ export default function Home() {
                   <p className="text-xs text-muted-foreground mt-0.5">Chakri Coins</p>
                 </div>
               </div>
-              <button
-                onClick={() => setLocation("/profile")}
-                className="w-full mt-3 text-xs text-primary hover:underline flex items-center justify-center gap-1"
-              >
-                View Profile <ArrowRight className="h-3 w-3" />
-              </button>
             </CardContent>
           </Card>
 
@@ -171,11 +157,9 @@ export default function Home() {
                 </div>
                 <p className="font-medium">No activity yet</p>
                 <p className="text-sm mt-1 max-w-xs mx-auto">
-                  Activity appears here as the community uses Chakri — invite colleagues to get started!
+                  Activity appears here as the community uses Chakri.
                 </p>
-                <Button size="sm" variant="outline" className="mt-4" onClick={() => setLocation("/search")}>
-                  Find People
-                </Button>
+                <Link href="/search" className="mt-4 inline-block text-xs text-primary hover:underline">Find People →</Link>
               </CardContent>
             </Card>
           )}

@@ -24,7 +24,7 @@ export function AppSidebar({ onLogout }: { onLogout?: () => void }) {
 
   useEffect(() => { api.auth.me().then(setUser).catch(() => {}); }, []);
 
-  // Poll for unread notifications (referral-related only)
+  // Poll for unread notifications — only referral workflow types shown on Referral Center badge
   useEffect(() => {
     const load = () =>
       fetch("/api/notifications", {
@@ -33,7 +33,8 @@ export function AppSidebar({ onLogout }: { onLogout?: () => void }) {
         .then(r => r.ok ? r.json() : [])
         .then((data: any[]) => {
           if (!Array.isArray(data)) return;
-          const referralTypes = ["referral_accepted", "referral_confirmed", "connection_request"];
+          // Only badge for referral-action notifications, NOT connection_request
+          const referralTypes = ["referral_accepted", "referral_confirmed"];
           const unread = data.filter(n => !n.read && referralTypes.includes(n.type)).length;
           setUnreadNotifCount(unread);
         })

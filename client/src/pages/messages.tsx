@@ -40,6 +40,11 @@ export default function Messages() {
   useEffect(() => {
     if (!activeUser) return;
     api.messages.thread(activeUser.id).then(setMessages).catch(() => setMessages([]));
+    // Poll for new messages every 5s while conversation is open
+    const t = setInterval(() => {
+      api.messages.thread(activeUser.id).then(setMessages).catch(() => {});
+    }, 5000);
+    return () => clearInterval(t);
   }, [activeUser]);
 
   useEffect(() => {

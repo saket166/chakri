@@ -190,4 +190,31 @@ export function registerAuthRoutes(app: Express) {
 
     return res.json({ ok: true });
   });
+
+  // ── Change Password ─────────────────────────────────────────────────────────
+  app.post("/api/auth/change-password", async (req: Request, res: Response) => {
+    const auth = req.headers["authorization"];
+    if (!auth || !auth.startsWith("Bearer ")) return res.status(401).json({ error: "Unauthorized" });
+    let userId: string;
+    try {
+      const payload = jwt.verify(auth.slice(7), JWT_SECRET) as { userId: string };
+      userId = payload.userId;
+    } catch { return res.status(401).json({ error: "Invalid token" }); }
+
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword)
+      return res.status(400).json({ error: "Current and new password are required" });
+    if (newPassword.length < 6)
+      return res.status(400).json({ error: "New password must be at least 6 characters" });
+
+    const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    const valid = await bcrypt.compare(currentPassword, user.passwordHash || "");
+    if (!valid) return res.status(400).json({ error: "Current password is incorrect" });
+
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    await db.update(users).set({ passwordHash }).where(eq(users.id, userId));
+    return res.json({ ok: true });
+  });
 }

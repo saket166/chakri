@@ -3,11 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Settings, Bell, Shield, Trash2, HelpCircle, FileText, AlertTriangle } from "lucide-react";
+import { Settings, Shield, Trash2, HelpCircle, FileText, AlertTriangle, KeyRound, Loader2 } from "lucide-react";
 import { api, getCachedUser, clearSession } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 
 async function deleteMe(): Promise<void> {
   const tok = localStorage.getItem("chakri_token") || "";
@@ -17,26 +18,57 @@ async function deleteMe(): Promise<void> {
   });
   if (!r.ok) throw new Error((await r.json()).error || "Delete failed");
 }
-import { useToast } from "@/hooks/use-toast";
-import { useLocation } from "wouter";
+
+async function changePassword(currentPassword: string, newPassword: string): Promise<void> {
+  const tok = localStorage.getItem("chakri_token") || "";
+  const r = await fetch("/api/auth/change-password", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${tok}` },
+    body: JSON.stringify({ currentPassword, newPassword }),
+  });
+  if (!r.ok) throw new Error((await r.json()).error || "Failed to change password");
+}
 
 export default function SettingsPage() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
-  const [profile, setProfile] = useState(getCachedUser() || {});
-  const [notifReferrals, setNotifReferrals] = useState(true);
-  const [notifMessages, setNotifMessages] = useState(true);
-  const [notifSystem, setNotifSystem] = useState(true);
+  const [profile, setProfile] = useState<any>(getCachedUser() || {});
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
+
+  // Change password state
+  const [currentPwd, setCurrentPwd] = useState("");
+  const [newPwd, setNewPwd] = useState("");
+  const [confirmPwd, setConfirmPwd] = useState("");
+  const [changingPwd, setChangingPwd] = useState(false);
 
   useEffect(() => {
     api.auth.me().then(setProfile).catch(() => {});
   }, []);
 
   const handleSave = async () => {
-    await api.auth.update({ phone: profile.phone, email: profile.email });
+    await api.auth.update({ phone: profile.phone });
     toast({ title: "Settings saved!" });
+  };
+
+  const handleChangePassword = async () => {
+    if (!currentPwd || !newPwd || !confirmPwd) {
+      toast({ title: "Please fill in all password fields", variant: "destructive" }); return;
+    }
+    if (newPwd !== confirmPwd) {
+      toast({ title: "New passwords do not match", variant: "destructive" }); return;
+    }
+    if (newPwd.length < 6) {
+      toast({ title: "New password must be at least 6 characters", variant: "destructive" }); return;
+    }
+    setChangingPwd(true);
+    try {
+      await changePassword(currentPwd, newPwd);
+      toast({ title: "Password changed successfully! ✅" });
+      setCurrentPwd(""); setNewPwd(""); setConfirmPwd("");
+    } catch (e: any) {
+      toast({ title: e.message || "Failed to change password", variant: "destructive" });
+    } finally { setChangingPwd(false); }
   };
 
   const handleDeleteAccount = async () => {
@@ -59,44 +91,49 @@ export default function SettingsPage() {
       </div>
 
       <div className="space-y-6">
-        {/* Account */}
+        {/* Account Info */}
         <Card>
           <CardHeader><CardTitle className="text-base flex items-center gap-2"><Shield className="h-4 w-4" />Account</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             <div>
               <Label>Email</Label>
-              <Input value={profile.email} onChange={e => setProfile(p => ({ ...p, email: e.target.value }))} />
-              <p className="text-xs text-muted-foreground mt-1">Used for login and notifications</p>
+              <Input value={profile.email || ""} disabled className="bg-muted/50 cursor-not-allowed" />
+              <p className="text-xs text-muted-foreground mt-1">Email cannot be changed here for security reasons</p>
             </div>
             <div>
               <Label>Phone Number</Label>
-              <Input value={profile.phone} onChange={e => setProfile(p => ({ ...p, phone: e.target.value }))} />
+              <Input value={profile.phone || ""} onChange={e => setProfile((p: any) => ({ ...p, phone: e.target.value }))} placeholder="+91 98765 43210" />
             </div>
             <Button onClick={handleSave}>Save Changes</Button>
           </CardContent>
         </Card>
 
-        {/* Notifications */}
+        {/* Change Password */}
         <Card>
-          <CardHeader><CardTitle className="text-base flex items-center gap-2"><Bell className="h-4 w-4" />Notifications</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
-            {[
-              ["Referral requests at my company", notifReferrals, setNotifReferrals],
-              ["New messages", notifMessages, setNotifMessages],
-              ["System updates & announcements", notifSystem, setNotifSystem],
-            ].map(([label, val, setter]) => (
-              <div key={label as string} className="flex items-center justify-between">
-                <Label className="cursor-pointer">{label as string}</Label>
-                <Switch checked={val as boolean} onCheckedChange={setter as (v: boolean) => void} />
-              </div>
-            ))}
+          <CardHeader><CardTitle className="text-base flex items-center gap-2"><KeyRound className="h-4 w-4" />Change Password</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            <div>
+              <Label>Current Password</Label>
+              <Input type="password" placeholder="••••••••" value={currentPwd} onChange={e => setCurrentPwd(e.target.value)} />
+            </div>
+            <div>
+              <Label>New Password</Label>
+              <Input type="password" placeholder="Min 6 characters" value={newPwd} onChange={e => setNewPwd(e.target.value)} />
+            </div>
+            <div>
+              <Label>Confirm New Password</Label>
+              <Input type="password" placeholder="••••••••" value={confirmPwd} onChange={e => setConfirmPwd(e.target.value)} />
+            </div>
+            <Button onClick={handleChangePassword} disabled={changingPwd} className="w-full">
+              {changingPwd ? <><Loader2 className="h-4 w-4 animate-spin mr-2" />Changing…</> : "Change Password"}
+            </Button>
           </CardContent>
         </Card>
 
         {/* Support */}
         <Card>
           <CardHeader><CardTitle className="text-base flex items-center gap-2"><HelpCircle className="h-4 w-4" />Support & Legal</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-1">
             {[
               { label: "Contact Support", sub: "support@chakri.app", href: "mailto:support@chakri.app" },
               { label: "Report a Bug", sub: "Help us improve Chakri", href: "mailto:bugs@chakri.app" },

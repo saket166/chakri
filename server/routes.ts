@@ -553,6 +553,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return res.json({ ok: true });
   });
 
+  // ── Expire overdue referrals (cron) ───────────────────────────────────────
+  const expireOverdueReferrals = async () => {
+    const now = new Date();
+    const overdue = await db.select().from(referralRequests).where(
+      and(eq(referralRequests.status, "accepted"), sql`${referralRequests.deadlineAt} < ${now}`)
+    );
+    for (const r of overdue) {
+      await db.update(referralRequests).set({ status: "expired", connectionActive: false })
+        .where(eq(referralRequests.id, r.id));
+      // Refund coins to requester
+      const [requester] = await db.select().from(users).where(eq(users.id, r.requesterId)).limit(1);
+      if (requester) {
+        await db.update(users).set({ points: requester.points + r.coinsCost }).where(eq(users.id, r.requesterId));
+      }
+      // Notify requester
+      await db.insert(notifications).values({
+        userId: r.requesterId, type: "referral_confirmed",
+        title: "Referral expired — coins refunded",
+        body: `Your referral request for ${r.position} at ${r.targetCompany} expired. ${r.coinsCost} coins have been returned to you.`,
+        linkUrl: "/referrals",
+      }).catch(() => {});
+    }
+    if (overdue.length > 0) console.log(`[cron] Expired ${overdue.length} overdue referral(s)`);
+  };
+
+  // Run immediately on boot, then every 10 minutes
+  expireOverdueReferrals().catch(console.error);
+  setInterval(() => expireOverdueReferrals().catch(console.error), 10 * 60 * 1000);
+
+  // Manual trigger endpoint (for testing / health checks)
+  app.post("/api/cron/expire-referrals", async (_req: Request, res: Response) => {
+    await expireOverdueReferrals();
+    return res.json({ ok: true });
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { Bell } from "lucide-react";
 import { AppSidebar } from "@/components/app-sidebar";
 import { JobsTicker } from "@/components/jobs-ticker";
 import Landing from "@/pages/landing";
@@ -23,6 +24,7 @@ import Contact from "@/pages/contact";
 import ForgotPassword from "@/pages/forgot-password";
 import ResetPassword from "@/pages/reset-password";
 import NotFound from "@/pages/not-found";
+import NotificationsPage from "@/pages/notifications";
 import { useState } from "react";
 import { isLoggedIn } from "@/lib/api";
 
@@ -44,21 +46,27 @@ function AppLayout() {
         <div className="flex flex-col flex-1 overflow-hidden">
           <header className="flex items-center justify-between p-4 border-b shrink-0">
             <SidebarTrigger />
-            <ThemeToggle />
+            <div className="flex items-center gap-2">
+              <a href="/notifications" className="relative p-2 rounded-md hover:bg-muted transition-colors">
+                <Bell className="h-5 w-5 text-muted-foreground" />
+              </a>
+              <ThemeToggle />
+            </div>
           </header>
           <main className="flex-1 overflow-auto">
             <Switch>
-              <Route path="/home"        component={Home} />
-              <Route path="/profile"     component={Profile} />
-              <Route path="/referrals"   component={Referrals} />
-              <Route path="/connections" component={Connections} />
-              <Route path="/marketplace" component={Marketplace} />
-              <Route path="/messages"    component={Messages} />
-              <Route path="/settings"    component={SettingsPage} />
-              <Route path="/search"      component={SearchPage} />
-              <Route path="/terms"       component={Terms} />
-              <Route path="/privacy"     component={Privacy} />
-              <Route path="/contact"     component={Contact} />
+              <Route path="/home"           component={Home} />
+              <Route path="/profile"        component={Profile} />
+              <Route path="/referrals"      component={Referrals} />
+              <Route path="/connections"    component={Connections} />
+              <Route path="/marketplace"    component={Marketplace} />
+              <Route path="/messages"       component={Messages} />
+              <Route path="/settings"       component={SettingsPage} />
+              <Route path="/search"         component={SearchPage} />
+              <Route path="/notifications"  component={NotificationsPage} />
+              <Route path="/terms"          component={Terms} />
+              <Route path="/privacy"        component={Privacy} />
+              <Route path="/contact"        component={Contact} />
               <Route component={NotFound} />
             </Switch>
           </main>
