@@ -54,6 +54,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return res.json(user);
   });
 
+  // ── Resume Upload (Supabase Storage) ────────────────────────────────────────
+  app.post("/api/upload/resume", async (req: Request, res: Response) => {
+    const userId = getUser(req);
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
+
+    const { base64, filename, mimeType } = req.body;
+    if (!base64 || !filename) return res.status(400).json({ error: "base64 and filename required" });
+
+    const SUPABASE_URL = process.env.SUPABASE_URL;
+    const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY;
+    if (!SUPABASE_URL || !SUPABASE_KEY)
+      return res.status(500).json({ error: "Storage not configured" });
+
+    try {
+      const buffer = Buffer.from(base64, "base64");
+      const safeName = `${userId}-${Date.now()}-${filename.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+      const uploadUrl = `${SUPABASE_URL}/storage/v1/object/resumes/${safeName}`;
+
+      const uploadRes = await fetch(uploadUrl, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${SUPABASE_KEY}`,
+          "Content-Type": mimeType || "application/octet-stream",
+          "x-upsert": "true",
+        },
+        body: buffer,
+      });
+
+      if (!uploadRes.ok) {
+        const err = await uploadRes.text();
+        console.error("Supabase upload error:", err);
+        return res.status(500).json({ error: "Upload failed" });
+      }
+
+      const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/resumes/${safeName}`;
+      return res.json({ url: publicUrl });
+    } catch (e) {
+      console.error("Upload error:", e);
+      return res.status(500).json({ error: "Upload failed" });
+    }
+  });
+
   app.delete("/api/users/me", async (req: Request, res: Response) => {
     const userId = getUser(req);
     if (!userId) return res.status(401).json({ error: "Unauthorized" });

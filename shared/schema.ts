@@ -44,6 +44,7 @@ export const referralRequests = pgTable("referral_requests", {
   acceptedAt:        timestamp("accepted_at"),
   deadlineAt:        timestamp("deadline_at"),
   screenshotNote:    text("screenshot_note"),
+  resumeUrl:         text("resume_url").default(""),
   connectionActive:  boolean("connection_active").default(false),
   createdAt:         timestamp("created_at").defaultNow(),
 });

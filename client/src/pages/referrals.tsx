@@ -329,11 +329,36 @@ export default function Referrals() {
     }
     setSubmitting(true);
     try {
+      // 1. Upload resume to Supabase Storage
+      let resumeUrl = "";
+      if (resumeFile) {
+        const reader = new FileReader();
+        const base64 = await new Promise<string>((resolve, reject) => {
+          reader.onload = () => {
+            const result = reader.result as string;
+            resolve(result.split(",")[1]); // strip data:...;base64,
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(resumeFile);
+        });
+        const tok = localStorage.getItem("chakri_token") || "";
+        const upRes = await fetch("/api/upload/resume", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${tok}` },
+          body: JSON.stringify({ base64, filename: resumeFile.name, mimeType: resumeFile.type }),
+        });
+        if (!upRes.ok) throw new Error("Resume upload failed. Please try again.");
+        const { url } = await upRes.json();
+        resumeUrl = url;
+      }
+
+      // 2. Create the referral request with the resume URL
       await api.requests.create({
         targetCompany: form.targetCompany,
         position: form.position,
         location: form.location,
         message: form.message,
+        resumeUrl,
       });
       setForm({ targetCompany: "", position: "", location: "", message: "" });
       setResumeFile(null); setCoverLetter("");

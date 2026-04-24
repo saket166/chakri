@@ -20,6 +20,8 @@ import SearchPage from "@/pages/search";
 import Terms from "@/pages/terms";
 import Privacy from "@/pages/privacy";
 import Contact from "@/pages/contact";
+import ForgotPassword from "@/pages/forgot-password";
+import ResetPassword from "@/pages/reset-password";
 import NotFound from "@/pages/not-found";
 import { useState } from "react";
 import { isLoggedIn } from "@/lib/api";
@@ -30,6 +32,8 @@ function AppLayout() {
   (window as any).__setAppLoggedIn = setLoggedIn;
 
   if (!loggedIn || location === "/") {
+    if (location === "/forgot-password") return <ForgotPassword />;
+    if (location === "/reset-password") return <ResetPassword />;
     return <Landing onLogin={() => setLoggedIn(true)} />;
   }
 
