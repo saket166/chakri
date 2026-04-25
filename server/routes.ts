@@ -44,6 +44,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return res.json(user);
   });
 
+  // ── Public profile (no auth required — shareable link) ──────────────────────
+  app.get("/api/users/:id", async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const [user] = await db.select().from(users).where(eq(users.id, id)).limit(1);
+    if (!user) return res.status(404).json({ error: "User not found" });
+    // Strip sensitive fields before returning
+    const { passwordHash, otpCode, otpExpiresAt, email: _email, phone: _phone, ...publicProfile } = user as any;
+    // Count completed referrals this user gave
+    const [{ count: referralCount }] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(referralRequests)
+      .where(and(eq(referralRequests.acceptedById, id), eq(referralRequests.status, "completed")));
+    return res.json({ ...publicProfile, referralCount: Number(referralCount) });
+  });
+
   app.patch("/api/users/me", async (req: Request, res: Response) => {
     const userId = getUser(req);
     if (!userId) return res.status(401).json({ error: "Unauthorized" });

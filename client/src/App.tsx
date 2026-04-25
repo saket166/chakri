@@ -25,6 +25,7 @@ import ForgotPassword from "@/pages/forgot-password";
 import ResetPassword from "@/pages/reset-password";
 import NotFound from "@/pages/not-found";
 import NotificationsPage from "@/pages/notifications";
+import PublicProfile from "@/pages/public-profile";
 import { useState, useEffect } from "react";
 import { isLoggedIn } from "@/lib/api";
 
@@ -89,6 +90,7 @@ function AppLayout() {
               <Route path="/settings"       component={SettingsPage} />
               <Route path="/search"         component={SearchPage} />
               <Route path="/notifications"  component={NotificationsPage} />
+              <Route path="/profile/:id"    component={PublicProfile} />
               <Route path="/terms"          component={Terms} />
               <Route path="/privacy"        component={Privacy} />
               <Route path="/contact"        component={Contact} />
