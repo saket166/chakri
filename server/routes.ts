@@ -274,21 +274,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return res.json(conns);
   });
 
-  // ── Public profile (no auth required — shareable link) ──────────────────────
-  // Catch-all user ID route MUST be last in the users section
-  app.get("/api/users/:id", async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const [user] = await db.select().from(users).where(eq(users.id, id)).limit(1);
-    if (!user) return res.status(404).json({ error: "User not found" });
-    // Strip sensitive fields before returning
-    const { passwordHash, otpCode, otpExpiresAt, email: _email, phone: _phone, ...publicProfile } = user as any;
-    const [{ count: referralCount }] = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(referralRequests)
-      .where(and(eq(referralRequests.acceptedById, id), eq(referralRequests.status, "completed")));
-    return res.json({ ...publicProfile, referralCount: Number(referralCount) });
-  });
-
   // ── Referral Requests ──────────────────────────────────────────────────────
 
   app.post("/api/requests", async (req: Request, res: Response) => {

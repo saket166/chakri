@@ -10,10 +10,6 @@ if (process.env.NODE_ENV === "production" && !process.env.JWT_SECRET) {
 }
 
 const app = express();
-// Trust one proxy hop — required on Render (and most PaaS) where requests
-// arrive via a load balancer that sets X-Forwarded-For.
-// Without this express-rate-limit throws ERR_ERL_UNEXPECTED_X_FORWARDED_FOR.
-app.set("trust proxy", 1);
 
 declare module 'http' {
   interface IncomingMessage {

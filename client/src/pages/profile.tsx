@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Edit, MapPin, Building2, Award, Save, X, Star, ThumbsUp, Plus, Trash2, GraduationCap, Briefcase, FileText, Copy, Check, Link2 } from "lucide-react";
+import { Edit, MapPin, Building2, Award, Save, X, Star, ThumbsUp, Plus, Trash2, GraduationCap, Briefcase, FileText } from "lucide-react";
 import { api, getCachedUser } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
@@ -21,14 +21,6 @@ export default function Profile() {
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState<any>({});
   const [newSkill, setNewSkill] = useState("");
-  const [copied, setCopied] = useState(false);
-
-  const copyProfileLink = () => {
-    const url = `${window.location.origin}/profile/${profile.id}`;
-    navigator.clipboard.writeText(url);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
 
   useEffect(() => {
     api.auth.me().then(u => { setProfile(u); setDraft(u); });
@@ -144,15 +136,9 @@ export default function Profile() {
                       <Button size="sm" variant="outline" onClick={() => setIsEditing(false)}><X className="h-3.5 w-3.5" /></Button>
                     </>
                   ) : (
-                    <div className="flex items-center gap-2">
-                      <Button size="sm" variant="outline" onClick={() => { setDraft(profile); setIsEditing(true); }}>
-                        <Edit className="h-3.5 w-3.5 mr-1" />Edit Profile
-                      </Button>
-                      <Button size="sm" variant="outline" onClick={copyProfileLink} className="gap-1.5">
-                        {copied ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
-                        {copied ? "Copied!" : "Share"}
-                      </Button>
-                    </div>
+                    <Button size="sm" variant="outline" onClick={() => { setDraft(profile); setIsEditing(true); }}>
+                      <Edit className="h-3.5 w-3.5 mr-1" />Edit Profile
+                    </Button>
                   )}
                 </div>
               </div>

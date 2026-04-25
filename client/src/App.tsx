@@ -25,7 +25,6 @@ import ForgotPassword from "@/pages/forgot-password";
 import ResetPassword from "@/pages/reset-password";
 import NotFound from "@/pages/not-found";
 import NotificationsPage from "@/pages/notifications";
-import PublicProfile from "@/pages/public-profile";
 import { useState, useEffect } from "react";
 import { isLoggedIn } from "@/lib/api";
 
@@ -65,10 +64,10 @@ function AppLayout() {
       <div className="flex h-screen w-full">
         <AppSidebar onLogout={() => setLoggedIn(false)} />
         <div className="flex flex-col flex-1 overflow-hidden">
-          <header className="flex items-center justify-between px-4 py-3 border-b shrink-0 glass sticky top-0 z-30">
-            <SidebarTrigger className="hover:bg-muted/60 rounded-lg transition-colors" />
-            <div className="flex items-center gap-1">
-              <a href="/notifications" className="relative p-2 rounded-xl hover:bg-muted/70 transition-colors">
+          <header className="flex items-center justify-between p-4 border-b shrink-0">
+            <SidebarTrigger />
+            <div className="flex items-center gap-2">
+              <a href="/notifications" className="relative p-2 rounded-md hover:bg-muted transition-colors">
                 <Bell className="h-5 w-5 text-muted-foreground" />
                 {unreadCount > 0 && (
                   <span className="absolute top-1 right-1 h-4 min-w-4 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center px-0.5 leading-none">
@@ -90,7 +89,6 @@ function AppLayout() {
               <Route path="/settings"       component={SettingsPage} />
               <Route path="/search"         component={SearchPage} />
               <Route path="/notifications"  component={NotificationsPage} />
-              <Route path="/profile/:id"    component={PublicProfile} />
               <Route path="/terms"          component={Terms} />
               <Route path="/privacy"        component={Privacy} />
               <Route path="/contact"        component={Contact} />
