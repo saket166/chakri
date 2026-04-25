@@ -175,44 +175,39 @@ export default function Landing({ onLogin }: { onLogin?: () => void }) {
           <div className="absolute inset-0 bg-gradient-to-b from-primary/10 via-background to-background" />
           <div className="container mx-auto px-4 py-16 relative">
             <div className="grid lg:grid-cols-2 gap-12 items-center">
-              <div className="space-y-6">
-                <h1 className="text-5xl font-bold tracking-tight">
-                  Get Your Dream Job Through{" "}
-                  <span className="text-primary">Referrals</span>
+              <div className="space-y-6 lg:pr-12">
+                <h1 className="text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight">
+                  The Fast Track to your <br className="hidden lg:block"/>
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-600">Dream Job.</span>
                 </h1>
                 <p className="text-xl text-muted-foreground">
-                  Connect with professionals, request referrals, and earn Chakri coins by helping others land their dream jobs.
+                  Skip the cold emails. Chakri connects you directly with insiders for guaranteed referrals.
                 </p>
-                <div className="grid grid-cols-1 gap-3 pt-4">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0"><Users className="h-5 w-5 text-primary" /></div>
-                    <p className="text-sm text-muted-foreground">Connect with employees at your target companies and ask for a referral directly</p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0"><Briefcase className="h-5 w-5 text-primary" /></div>
-                    <p className="text-sm text-muted-foreground">Post referral requests — pay only when someone accepts and refers you</p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0"><Award className="h-5 w-5 text-primary" /></div>
-                    <p className="text-sm text-muted-foreground">Earn Chakri Coins for every successful referral you give — redeem in the marketplace</p>
+                <div className="flex items-center gap-6 pt-4 text-sm font-medium text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    <div className="flex -space-x-2">
+                      <div className="h-8 w-8 rounded-full border-2 border-background bg-blue-100 flex items-center justify-center"><Users className="h-3.5 w-3.5 text-blue-600" /></div>
+                      <div className="h-8 w-8 rounded-full border-2 border-background bg-green-100 flex items-center justify-center"><Briefcase className="h-3.5 w-3.5 text-green-600" /></div>
+                      <div className="h-8 w-8 rounded-full border-2 border-background bg-amber-100 flex items-center justify-center"><Award className="h-3.5 w-3.5 text-amber-600" /></div>
+                    </div>
+                    <span>Join 5,000+ top professionals</span>
                   </div>
                 </div>
               </div>
 
-              <Card className="shadow-lg">
-                <CardHeader>
-                  <CardTitle>Welcome to Chakri</CardTitle>
-                  <CardDescription>Sign in or create an account to get started</CardDescription>
+              <Card className="shadow-2xl shadow-primary/5 border-primary/10">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-2xl">Get Started</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <Tabs defaultValue="login" className="w-full">
-                    <TabsList className="grid w-full grid-cols-2">
+                    <TabsList className="grid w-full grid-cols-2 mb-4">
                       <TabsTrigger value="login">Sign In</TabsTrigger>
-                      <TabsTrigger value="signup">Sign Up</TabsTrigger>
+                      <TabsTrigger value="signup">Create Account</TabsTrigger>
                     </TabsList>
 
                     {/* ── SIGN IN ── */}
-                    <TabsContent value="login" className="space-y-4 pt-2">
+                    <TabsContent value="login" className="space-y-4">
                       <form onSubmit={handleLogin} className="space-y-4">
                         <div className="space-y-2">
                           <Label>Email</Label>
@@ -223,84 +218,45 @@ export default function Landing({ onLogin }: { onLogin?: () => void }) {
                           <Input type="password" placeholder="••••••••" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} required />
                         </div>
                         {error && <p className="text-sm text-destructive">{error}</p>}
-                        <Button type="submit" className="w-full" disabled={loading}>
+                        <Button type="submit" className="w-full h-11 text-base font-medium" disabled={loading}>
                           {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}Sign In
                         </Button>
                         <p className="text-center text-sm">
-                          <Link href="/forgot-password" className="text-primary hover:underline">Forgot password?</Link>
+                          <Link href="/forgot-password" className="text-muted-foreground hover:text-primary transition-colors">Forgot your password?</Link>
                         </p>
                       </form>
                     </TabsContent>
 
                     {/* ── SIGN UP ── */}
-                    <TabsContent value="signup" className="space-y-3 pt-2">
+                    <TabsContent value="signup" className="space-y-3">
                       <form onSubmit={handleSignup} className="space-y-3">
-                        <div className="space-y-1.5">
-                          <Label>Full Name *</Label>
-                          <Input placeholder="Priya Sharma" value={name} onChange={e => setName(e.target.value)} required />
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1.5"><Label className="text-xs">Full Name *</Label><Input className="h-9" placeholder="Priya Sharma" value={name} onChange={e => setName(e.target.value)} required /></div>
+                          <div className="space-y-1.5"><Label className="text-xs">Email *</Label><Input className="h-9" type="email" placeholder="you@domain.com" value={email} onChange={e => setEmail(e.target.value)} required /></div>
                         </div>
-                        <div className="space-y-1.5">
-                          <Label>Email *</Label>
-                          <Input type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} required />
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1.5"><Label className="text-xs">Password *</Label><Input className="h-9" type="password" placeholder="Min 6 chars" value={password} onChange={e => setPassword(e.target.value)} required /></div>
+                          <div className="space-y-1.5"><Label className="text-xs">Confirm Password *</Label><Input className="h-9" type="password" placeholder="••••••••" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required /></div>
                         </div>
-                        <div className="space-y-1.5">
-                          <Label>Phone</Label>
-                          <Input type="tel" placeholder="+91 98765 43210" value={phone} onChange={e => setPhone(e.target.value)} />
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1.5"><Label className="text-xs">Current Role</Label><Input className="h-9" placeholder="Software Engineer" value={headline} onChange={e => setHeadline(e.target.value)} /></div>
+                          <div className="space-y-1.5"><Label className="text-xs">Company</Label><Input className="h-9" placeholder="Infosys" value={company} onChange={e => setCompany(e.target.value)} /></div>
                         </div>
-                        <div className="space-y-1.5">
-                          <Label>Current Role</Label>
-                          <Input placeholder="Software Engineer at Infosys" value={headline} onChange={e => setHeadline(e.target.value)} />
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1.5"><Label className="text-xs">Location</Label><Input className="h-9" placeholder="Bengaluru" value={userLocation} onChange={e => setUserLocation(e.target.value)} /></div>
+                          <div className="space-y-1.5"><Label className="text-xs">Phone</Label><Input className="h-9" type="tel" placeholder="+91..." value={phone} onChange={e => setPhone(e.target.value)} /></div>
                         </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="space-y-1.5">
-                            <Label>Company</Label>
-                            <Input placeholder="Infosys" value={company} onChange={e => setCompany(e.target.value)} />
-                          </div>
-                          <div className="space-y-1.5">
-                            <Label>Location</Label>
-                            <Input placeholder="Bengaluru" value={userLocation} onChange={e => setUserLocation(e.target.value)} />
-                          </div>
-                        </div>
-                        <div className="space-y-1.5">
-                          <Label>Password *</Label>
-                          <Input type="password" placeholder="Min 6 characters" value={password} onChange={e => setPassword(e.target.value)} required />
-                        </div>
-                        <div className="space-y-1.5">
-                          <Label>Confirm Password *</Label>
-                          <Input type="password" placeholder="••••••••" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required />
-                        </div>
-                        {error && <p className="text-sm text-destructive">{error}</p>}
-                        <Button type="submit" className="w-full" disabled={loading}>
-                          {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                          Create Account
+                        
+                        {error && <p className="text-sm text-destructive font-medium bg-destructive/10 p-2 rounded">{error}</p>}
+                        <Button type="submit" className="w-full h-11 text-base font-medium mt-2" disabled={loading}>
+                          {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}Create Account
                         </Button>
-                        <p className="text-xs text-center text-muted-foreground">🎁 500 Chakri Coins welcome bonus! · Email verification required.</p>
+                        <p className="text-xs text-center text-muted-foreground mt-1">🎁 Create an account to receive 500 bonus coins!</p>
                       </form>
                     </TabsContent>
                   </Tabs>
                 </CardContent>
               </Card>
-            </div>
-          </div>
-        </section>
-
-        <section className="py-16 bg-muted/30">
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold mb-4">How Chakri Works</h2>
-            </div>
-            <div className="grid md:grid-cols-3 gap-8">
-              {[
-                { icon: Users,    title: "Connect",          desc: "Build your professional network with people at your target companies" },
-                { icon: Briefcase,title: "Request Referrals", desc: "Post referral requests that match your skills and career goals" },
-                { icon: Award,    title: "Earn Coins",        desc: "Help others and earn Chakri coins for every successful referral" },
-              ].map(item => (
-                <Card key={item.title}><CardHeader>
-                  <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4"><item.icon className="h-6 w-6 text-primary" /></div>
-                  <CardTitle>{item.title}</CardTitle>
-                  <CardDescription>{item.desc}</CardDescription>
-                </CardHeader></Card>
-              ))}
             </div>
           </div>
         </section>
