@@ -190,7 +190,7 @@ export default function Landing({ onLogin }: { onLogin?: () => void }) {
                       <div className="h-8 w-8 rounded-full border-2 border-background bg-green-100 flex items-center justify-center"><Briefcase className="h-3.5 w-3.5 text-green-600" /></div>
                       <div className="h-8 w-8 rounded-full border-2 border-background bg-amber-100 flex items-center justify-center"><Award className="h-3.5 w-3.5 text-amber-600" /></div>
                     </div>
-                    <span>Join 5,000+ top professionals</span>
+                    <span>Join a growing community of professionals</span>
                   </div>
                 </div>
               </div>
