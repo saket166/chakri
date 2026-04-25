@@ -71,7 +71,7 @@ export default function Home() {
 
           {/* Coins widget — gradient card */}
           <Card className="shadow-sm overflow-hidden border-0">
-            <div className="bg-gradient-to-br from-violet-600 via-indigo-600 to-blue-700 p-5 relative">
+            <div className="bg-gradient-to-br from-red-500 via-rose-600 to-orange-500 p-5 relative">
               {/* Background glow */}
               <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-8 translate-x-8 blur-2xl" />
               <div className="flex items-center gap-3 mb-4 relative z-10">

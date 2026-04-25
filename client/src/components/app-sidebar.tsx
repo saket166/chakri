@@ -59,7 +59,7 @@ export function AppSidebar({ onLogout }: { onLogout?: () => void }) {
       {/* Logo */}
       <SidebarHeader className="p-4 border-b border-sidebar-border">
         <Link href="/home" className="flex items-center gap-2.5 group">
-          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/30 group-hover:shadow-violet-500/50 transition-shadow">
+          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center shadow-lg shadow-red-500/30 group-hover:shadow-red-500/50 transition-shadow">
             <span className="text-white font-bold text-base">C</span>
           </div>
           <span className="font-bold text-xl text-sidebar-foreground tracking-tight">Chakri</span>
@@ -79,7 +79,7 @@ export function AppSidebar({ onLogout }: { onLogout?: () => void }) {
                       <Link href={item.url}
                         className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150
                           ${isActive
-                            ? "bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md shadow-violet-500/25"
+                            ? "bg-gradient-to-r from-red-500 to-rose-600 text-white shadow-md shadow-red-500/25"
                             : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
                           }`}>
                         <item.icon className={`h-4 w-4 shrink-0 ${isActive ? "text-white" : ""}`} />
@@ -109,9 +109,9 @@ export function AppSidebar({ onLogout }: { onLogout?: () => void }) {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-sidebar-accent transition-colors text-left group">
-              <Avatar className="h-9 w-9 shrink-0 ring-2 ring-violet-500/30">
+              <Avatar className="h-9 w-9 shrink-0 ring-2 ring-red-500/30">
                 {user?.avatarUrl && <AvatarImage src={user.avatarUrl} alt={user.name} />}
-                <AvatarFallback className="bg-gradient-to-br from-violet-500 to-indigo-600 text-white font-bold text-sm">{initials}</AvatarFallback>
+                <AvatarFallback className="bg-gradient-to-br from-red-500 to-rose-600 text-white font-bold text-sm">{initials}</AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-sidebar-foreground truncate">{user?.name || "Your Name"}</p>

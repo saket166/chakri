@@ -101,12 +101,12 @@ export default function Landing({ onLogin }: { onLogin?: () => void }) {
       <div className="min-h-screen flex items-center justify-center px-4"
         style={{ background: "linear-gradient(135deg, #0f0c29 0%, #1a1363 50%, #24243e 100%)" }}>
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-violet-600/20 rounded-full blur-3xl" />
-          <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-indigo-600/15 rounded-full blur-3xl" />
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-red-600/20 rounded-full blur-3xl" />
+          <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-rose-600/15 rounded-full blur-3xl" />
         </div>
         <div className="glass-card rounded-2xl p-8 w-full max-w-md relative z-10 shadow-2xl">
           <div className="text-center mb-6">
-            <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center mx-auto mb-4 shadow-lg">
+            <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center mx-auto mb-4 shadow-lg">
               <Mail className="h-8 w-8 text-white" />
             </div>
             <h2 className="text-2xl font-bold text-foreground">Check your email</h2>
@@ -170,13 +170,13 @@ export default function Landing({ onLogin }: { onLogin?: () => void }) {
       <section className="relative overflow-hidden pt-16 min-h-screen flex items-center">
         {/* Dark gradient background */}
         <div className="absolute inset-0"
-          style={{ background: "linear-gradient(135deg, #0f0c29 0%, #1a1363 45%, #24243e 75%, #0f0c29 100%)" }} />
+          style={{ background: "linear-gradient(135deg, #1a0505 0%, #3d0000 45%, #200a0a 75%, #1a0505 100%)" }} />
 
         {/* Ambient glow blobs */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/4 -left-20 w-[500px] h-[500px] bg-violet-700/25 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-indigo-600/20 rounded-full blur-3xl" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-purple-800/10 rounded-full blur-3xl" />
+          <div className="absolute top-1/4 -left-20 w-[500px] h-[500px] bg-red-700/25 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-rose-600/20 rounded-full blur-3xl" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-red-800/10 rounded-full blur-3xl" />
         </div>
 
         {/* Grid pattern overlay */}
@@ -188,7 +188,7 @@ export default function Landing({ onLogin }: { onLogin?: () => void }) {
 
             {/* Left — Copy */}
             <div className="space-y-8">
-              <div className="inline-flex items-center gap-2 bg-violet-500/15 border border-violet-400/25 rounded-full px-4 py-1.5 text-sm text-violet-300 font-medium backdrop-blur-sm">
+              <div className="inline-flex items-center gap-2 bg-red-500/15 border border-red-400/25 rounded-full px-4 py-1.5 text-sm text-red-200 font-medium backdrop-blur-sm">
                 <Zap className="h-3.5 w-3.5" />
                 India's first referral coin economy
               </div>
@@ -211,8 +211,8 @@ export default function Landing({ onLogin }: { onLogin?: () => void }) {
                   { icon: Award,    label: "Earn",     sub: "500 coins on signup" },
                 ].map(f => (
                   <div key={f.label} className="flex items-start gap-3 bg-white/5 border border-white/10 rounded-xl p-3.5 backdrop-blur-sm hover:bg-white/8 transition-colors">
-                    <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-violet-500/40 to-indigo-500/40 flex items-center justify-center shrink-0">
-                      <f.icon className="h-4 w-4 text-violet-300" />
+                    <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-red-500/40 to-rose-500/40 flex items-center justify-center shrink-0">
+                      <f.icon className="h-4 w-4 text-red-300" />
                     </div>
                     <div>
                       <p className="text-white font-semibold text-sm">{f.label}</p>
@@ -234,9 +234,9 @@ export default function Landing({ onLogin }: { onLogin?: () => void }) {
             <div id="auth-card">
               <div className="relative">
                 {/* Glow behind card */}
-                <div className="absolute -inset-4 bg-gradient-to-r from-violet-600/30 to-indigo-600/30 rounded-3xl blur-2xl" />
+                <div className="absolute -inset-4 bg-gradient-to-r from-red-600/30 to-rose-600/30 rounded-3xl blur-2xl" />
                 <div className="relative glass-card rounded-2xl shadow-2xl overflow-hidden">
-                  <div className="bg-gradient-to-r from-violet-600/10 via-transparent to-indigo-600/10 p-6 pb-4 border-b border-white/10">
+                  <div className="bg-gradient-to-r from-red-600/10 via-transparent to-rose-600/10 p-6 pb-4 border-b border-white/10">
                     <h2 className="text-xl font-bold text-foreground">Welcome to Chakri</h2>
                     <p className="text-muted-foreground text-sm mt-0.5">Sign in or join the network</p>
                   </div>
@@ -337,9 +337,9 @@ export default function Landing({ onLogin }: { onLogin?: () => void }) {
           </div>
           <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
             {[
-              { n: "01", icon: Users,    title: "Build your network",   desc: "Connect with employees already working at your target companies. Real people, real referrals.",   color: "from-violet-500 to-indigo-600" },
-              { n: "02", icon: Briefcase,title: "Request a referral",   desc: "Post your referral request with your target company, role, and resume. Pay coins only when accepted.", color: "from-indigo-500 to-blue-600" },
-              { n: "03", icon: Award,    title: "Earn & grow",          desc: "Help others get referred and earn Chakri Coins. Redeem them, top up your queue, or pay it forward.", color: "from-blue-500 to-cyan-600" },
+              { n: "01", icon: Users,    title: "Build your network",   desc: "Connect with employees already working at your target companies. Real people, real referrals.",   color: "from-red-500 to-rose-600" },
+              { n: "02", icon: Briefcase,title: "Request a referral",   desc: "Post your referral request with your target company, role, and resume. Pay coins only when accepted.", color: "from-rose-500 to-orange-500" },
+              { n: "03", icon: Award,    title: "Earn & grow",          desc: "Help others get referred and earn Chakri Coins. Redeem them, top up your queue, or pay it forward.", color: "from-orange-500 to-amber-500" },
             ].map((step, i) => (
               <div key={step.n} className="relative group card-hover">
                 <div className="bg-card border border-border rounded-2xl p-7 h-full shadow-sm hover:shadow-md transition-shadow">
