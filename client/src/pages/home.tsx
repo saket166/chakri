@@ -69,30 +69,27 @@ export default function Home() {
         {/* ── Left column ── */}
         <div className="space-y-4">
 
-          {/* Coins widget — gradient card */}
-          <Card className="shadow-sm overflow-hidden border-0">
-            <div className="bg-gradient-to-br from-red-500 via-rose-600 to-orange-500 p-5 relative">
-              {/* Background glow */}
-              <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-8 translate-x-8 blur-2xl" />
-              <div className="flex items-center gap-3 mb-4 relative z-10">
-                <div className="h-10 w-10 rounded-full bg-white/20 ring-2 ring-white/30 flex items-center justify-center font-bold text-white text-sm shrink-0">
+          {/* Coins widget */}
+          <Card className="shadow-sm">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="h-11 w-11 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold text-base shrink-0">
                   {(user?.name || "?").split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()}
                 </div>
                 <div className="min-w-0">
-                  <p className="font-semibold text-white truncate">{user?.name || "Your Name"}</p>
-                  <p className="text-xs text-white/60 truncate">{user?.headline || "Add your headline"}</p>
+                  <p className="font-semibold truncate">{user?.name || "Your Name"}</p>
+                  <p className="text-xs text-muted-foreground truncate">{user?.headline || "Add your headline"}</p>
                 </div>
               </div>
-              <div className="relative z-10">
-                <p className="text-4xl font-extrabold text-white tracking-tight">{(user?.points || 0).toLocaleString()}</p>
-                <div className="flex items-center gap-1.5 mt-1">
-                  <Award className="h-3.5 w-3.5 text-amber-300" />
-                  <p className="text-xs text-white/70 font-medium">Chakri Coins</p>
+              <div className="rounded-lg bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-950/30 dark:to-amber-950/20 border border-yellow-200/60 dark:border-yellow-800/30 p-3 flex items-center gap-3">
+                <div className="h-9 w-9 rounded-full bg-yellow-100 dark:bg-yellow-900/40 flex items-center justify-center shrink-0">
+                  <Award className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+                </div>
+                <div>
+                  <p className="text-lg font-bold leading-none">{(user?.points || 0).toLocaleString()}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Chakri Coins</p>
                 </div>
               </div>
-            </div>
-            <CardContent className="px-5 py-3">
-              <Link href="/marketplace" className="text-xs text-primary hover:underline font-medium">View Marketplace →</Link>
             </CardContent>
           </Card>
 
@@ -112,10 +109,14 @@ export default function Home() {
               {!loading && companyStats.length > 0 && (
                 <div className="flex flex-wrap gap-1.5">
                   {companyStats.map(({ company, count }) => (
-                    <div key={company} className="flex items-center gap-1.5 bg-muted hover:bg-primary/8 transition-colors rounded-full px-2.5 py-1 cursor-default">
-                      <div className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
+                    <div
+                      key={company}
+                      className="flex items-center gap-1.5 bg-muted rounded-full px-2.5 py-1"
+                    >
                       <span className="text-xs font-medium">{company}</span>
-                      <span className="text-[10px] font-bold text-primary/70">{count}</span>
+                      <span className="text-[10px] font-bold text-primary bg-primary/10 rounded-full px-1.5 py-0.5">
+                        {count}
+                      </span>
                     </div>
                   ))}
                 </div>

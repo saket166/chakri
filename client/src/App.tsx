@@ -64,13 +64,13 @@ function AppLayout() {
       <div className="flex h-screen w-full">
         <AppSidebar onLogout={() => setLoggedIn(false)} />
         <div className="flex flex-col flex-1 overflow-hidden">
-          <header className="flex items-center justify-between px-4 py-3 border-b border-border/60 shrink-0 backdrop-blur-sm bg-background/95 sticky top-0 z-30">
+          <header className="flex items-center justify-between p-4 border-b shrink-0">
             <SidebarTrigger />
             <div className="flex items-center gap-2">
-              <a href="/notifications" className="relative p-2 rounded-lg hover:bg-muted transition-colors">
+              <a href="/notifications" className="relative p-2 rounded-md hover:bg-muted transition-colors">
                 <Bell className="h-5 w-5 text-muted-foreground" />
                 {unreadCount > 0 && (
-                  <span className="absolute top-1 right-1 h-4 min-w-4 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center px-0.5 leading-none shadow-sm">
+                  <span className="absolute top-1 right-1 h-4 min-w-4 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center px-0.5 leading-none">
                     {unreadCount > 9 ? "9+" : unreadCount}
                   </span>
                 )}
