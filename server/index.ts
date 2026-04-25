@@ -10,6 +10,7 @@ if (process.env.NODE_ENV === "production" && !process.env.JWT_SECRET) {
 }
 
 const app = express();
+app.set("trust proxy", 1);
 
 declare module 'http' {
   interface IncomingMessage {
