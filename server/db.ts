@@ -10,9 +10,10 @@ if (!process.env.DATABASE_URL) {
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false },
-  max: 30,
+  max: 15, // Match Supabase's default pool size
   connectionTimeoutMillis: 10000,
-  idleTimeoutMillis: 30000,
+  idleTimeoutMillis: 10000, // Close idle connections quickly
+  keepAlive: true, // Prevent zombie connections if AWS drops idle TCP
 });
 
 export const db = drizzle(pool, { schema });
