@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, integer, boolean, timestamp, jsonb, uuid } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, boolean, timestamp, jsonb, uuid, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 
 export const users = pgTable("users", {
@@ -25,6 +25,10 @@ export const users = pgTable("users", {
   otpExpiresAt:         timestamp("otp_expires_at"),
   emailVerified:        boolean("email_verified").default(false),
   createdAt:            timestamp("created_at").defaultNow(),
+}, (table) => {
+  return {
+    companyIdx: index("users_company_idx").on(table.company),
+  };
 });
 
 export const referralRequests = pgTable("referral_requests", {
@@ -47,6 +51,13 @@ export const referralRequests = pgTable("referral_requests", {
   resumeUrl:         text("resume_url").default(""),
   connectionActive:  boolean("connection_active").default(false),
   createdAt:         timestamp("created_at").defaultNow(),
+}, (table) => {
+  return {
+    requesterIdx: index("req_requester_idx").on(table.requesterId),
+    acceptedByIdx: index("req_accepted_by_idx").on(table.acceptedById),
+    statusIdx: index("req_status_idx").on(table.status),
+    companyIdx: index("req_target_company_idx").on(table.targetCompany),
+  };
 });
 
 export const feedItems = pgTable("feed_items", {
@@ -76,6 +87,11 @@ export const directMessages = pgTable("direct_messages", {
   text:      text("text").notNull(),
   read:      boolean("read").default(false),
   createdAt: timestamp("created_at").defaultNow(),
+}, (table) => {
+  return {
+    fromIdx: index("dm_from_idx").on(table.fromId),
+    toIdx: index("dm_to_idx").on(table.toId),
+  };
 });
 
 export const chatMessages = pgTable("chat_messages", {
@@ -85,6 +101,10 @@ export const chatMessages = pgTable("chat_messages", {
   senderName: text("sender_name").notNull(),
   text:       text("text").notNull(),
   createdAt:  timestamp("created_at").defaultNow(),
+}, (table) => {
+  return {
+    requestIdx: index("chat_request_idx").on(table.requestId),
+  };
 });
 
 export const notifications = pgTable("notifications", {
@@ -96,6 +116,10 @@ export const notifications = pgTable("notifications", {
   read:      boolean("read").default(false),
   linkUrl:   text("link_url").default(""),
   createdAt: timestamp("created_at").defaultNow(),
+}, (table) => {
+  return {
+    userIdx: index("notif_user_idx").on(table.userId),
+  };
 });
 
 export type User = typeof users.$inferSelect;
@@ -118,6 +142,11 @@ export const connectionRequests = pgTable("connection_requests", {
   toId:       uuid("to_id").notNull().references(() => users.id),
   status:     text("status").notNull().default("pending"), // pending | accepted | rejected
   createdAt:  timestamp("created_at").defaultNow(),
+}, (table) => {
+  return {
+    fromIdx: index("conn_req_from_idx").on(table.fromId),
+    toIdx: index("conn_req_to_idx").on(table.toId),
+  };
 });
 
 export type ConnectionRequest = typeof connectionRequests.$inferSelect;
