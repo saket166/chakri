@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Search, Building2, MessageCircle, UserPlus, CheckCircle, Clock } from "lucide-react";
 import { api, getCachedUser } from "@/lib/api";
-import { useLocation } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 
 export default function SearchPage() {
@@ -66,11 +66,13 @@ export default function SearchPage() {
           return (
             <Card key={u.id} className="hover:shadow-md transition-all">
               <CardContent className="p-4 flex items-center gap-4">
-                <Avatar className="h-12 w-12 shrink-0">
-                  <AvatarFallback className="bg-primary/10 text-primary font-semibold">{initials}</AvatarFallback>
-                </Avatar>
+                <Link href={`/user/${u.id}`} className="shrink-0 cursor-pointer hover:opacity-80 transition-opacity">
+                  <Avatar className="h-12 w-12">
+                    <AvatarFallback className="bg-primary/10 text-primary font-semibold">{initials}</AvatarFallback>
+                  </Avatar>
+                </Link>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold">{u.name}</p>
+                  <Link href={`/user/${u.id}`} className="font-semibold hover:underline cursor-pointer">{u.name}</Link>
                   {u.headline && <p className="text-sm text-muted-foreground truncate">{u.headline}</p>}
                   {u.company && <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5"><Building2 className="h-3 w-3" />{u.company}</p>}
                 </div>

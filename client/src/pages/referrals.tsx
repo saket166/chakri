@@ -12,6 +12,7 @@ import {
   User, Briefcase, Search, MessageCircle, Star, Award,
   Upload, ThumbsUp, Link2, ArrowUp, Info, Loader2, AlertTriangle
 } from "lucide-react";
+import { Link } from "wouter";
 import { api, getCachedUser } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
@@ -193,13 +194,17 @@ function RequestCard({ req, me, onRefresh, showAccept, refereeAtCapacity }: {
             <p className="text-sm text-muted-foreground">{req.targetCompany}</p>
             <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground flex-wrap">
               {req.location && <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{req.location}</span>}
-              <span className="flex items-center gap-1"><User className="h-3 w-3" />{req.requesterName}</span>
+              <span className="flex items-center gap-1"><User className="h-3 w-3" />
+                <Link href={`/user/${req.requesterId}`} className="hover:underline">{req.requesterName}</Link>
+              </span>
               <span>{formatDistanceToNow(new Date(req.createdAt), { addSuffix: true })}</span>
               <span className="flex items-center gap-1"><Award className="h-3 w-3 text-yellow-500" />{req.coinsCost} coins</span>
             </div>
             {req.message && <p className="text-xs mt-1 italic text-muted-foreground">"{req.message}"</p>}
             {req.acceptedByName && req.status !== "completed" && (
-              <p className="text-xs mt-1 text-blue-600 dark:text-blue-400 font-medium">Accepted by: {req.acceptedByName}</p>
+              <p className="text-xs mt-1 text-blue-600 dark:text-blue-400 font-medium">
+                Accepted by: <Link href={`/user/${req.acceptedById}`} className="hover:underline">{req.acceptedByName}</Link>
+              </p>
             )}
             {/* Show resume link to referee so they have what they need to make the referral */}
             {isAcceptedByMe && req.resumeUrl && (

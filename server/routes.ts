@@ -158,6 +158,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return res.json(results);
   });
 
+  app.get("/api/users/profile/:id", async (req: Request, res: Response) => {
+    const userId = getUser(req);
+    const targetId = req.params.id;
+    if (!targetId) return res.status(400).json({ error: "No user ID provided" });
+
+    // 1. Fetch public info
+    const [targetUser] = await db.select({
+      id: users.id, name: users.name, headline: users.headline,
+      location: users.location, company: users.company, bio: users.bio,
+      avatarUrl: users.avatarUrl, skills: users.skills,
+      workHistory: users.workHistory, education: users.education,
+      certifications: users.certifications, permanentConnections: users.permanentConnections,
+      points: users.points,
+    }).from(users).where(eq(users.id, targetId)).limit(1);
+
+    if (!targetUser) return res.status(404).json({ error: "User not found" });
+
+    // 2. Determine connection status if logged in
+    let connectionStatus = "none";
+    if (userId) {
+      if (userId === targetId) {
+        connectionStatus = "self";
+      } else {
+        const conns: string[] = (targetUser.permanentConnections as string[]) || [];
+        if (conns.includes(userId)) {
+          connectionStatus = "connected";
+        } else {
+          // Check pending requests
+          const existingReqs = await db.select().from(connectionRequests).where(
+            or(
+              and(eq(connectionRequests.fromId, userId), eq(connectionRequests.toId, targetId), eq(connectionRequests.status, "pending")),
+              and(eq(connectionRequests.fromId, targetId), eq(connectionRequests.toId, userId), eq(connectionRequests.status, "pending"))
+            )
+          ).limit(1);
+          
+          if (existingReqs.length > 0) {
+            const cr = existingReqs[0];
+            if (cr.fromId === userId) connectionStatus = "pending_sent";
+            else connectionStatus = "pending_received";
+          }
+        }
+      }
+    }
+
+    // Remove permanentConnections array from public payload for privacy
+    const publicUser = { ...targetUser, connectionCount: (targetUser.permanentConnections as string[] || []).length };
+    delete (publicUser as any).permanentConnections;
+
+    return res.json({ user: publicUser, connectionStatus });
+  });
+
+
   // ── Connection Requests (friend request flow) ──────────────────────────────
 
   // Send a connection request

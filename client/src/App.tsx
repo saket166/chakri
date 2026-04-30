@@ -12,6 +12,7 @@ import { JobsTicker } from "@/components/jobs-ticker";
 import Landing from "@/pages/landing";
 import Home from "@/pages/home";
 import Profile from "@/pages/profile";
+import PublicProfile from "@/pages/public-profile";
 import Referrals from "@/pages/referrals";
 import Connections from "@/pages/connections";
 import Marketplace from "@/pages/marketplace";
@@ -82,6 +83,7 @@ function AppLayout() {
             <Switch>
               <Route path="/home"           component={Home} />
               <Route path="/profile"        component={Profile} />
+              <Route path="/user/:id"       component={PublicProfile} />
               <Route path="/referrals"      component={Referrals} />
               <Route path="/connections"    component={Connections} />
               <Route path="/marketplace"    component={Marketplace} />
