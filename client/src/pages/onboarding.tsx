@@ -48,7 +48,7 @@ export default function Onboarding() {
   const handleComplete = async () => {
     setLoading(true);
     try {
-      const updatedUser = await api.users.update({
+      const updatedUser = await api.auth.update({
         headline,
         company,
         location: userLoc,
