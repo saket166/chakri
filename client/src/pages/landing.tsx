@@ -29,7 +29,6 @@ export default function Landing({ onLogin }: { onLogin?: () => void }) {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
 
   // Sign in fields
   const [loginEmail, setLoginEmail] = useState("");
