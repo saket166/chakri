@@ -29,9 +29,7 @@ export default function Landing({ onLogin }: { onLogin?: () => void }) {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [headline, setHeadline] = useState("");
-  const [company, setCompany] = useState("");
-  const [userLocation, setUserLocation] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   // Sign in fields
   const [loginEmail, setLoginEmail] = useState("");
@@ -59,7 +57,7 @@ export default function Landing({ onLogin }: { onLogin?: () => void }) {
     if (password !== confirmPassword) { setError("Passwords do not match."); return; }
     setLoading(true);
     try {
-      const res = await api.auth.signup({ name, email, password, phone, headline, company, location: userLocation });
+      const res = await api.auth.signup({ name, email, password, phone });
       setPendingUserId(res.userId);
       setPendingEmail(email);
       setStep("otp");
@@ -238,14 +236,7 @@ export default function Landing({ onLogin }: { onLogin?: () => void }) {
                           <div className="space-y-1.5"><Label className="text-xs">Password *</Label><Input className="h-9" type="password" placeholder="Min 6 chars" value={password} onChange={e => setPassword(e.target.value)} required /></div>
                           <div className="space-y-1.5"><Label className="text-xs">Confirm Password *</Label><Input className="h-9" type="password" placeholder="••••••••" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required /></div>
                         </div>
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="space-y-1.5"><Label className="text-xs">Current Role</Label><Input className="h-9" placeholder="Software Engineer" value={headline} onChange={e => setHeadline(e.target.value)} /></div>
-                          <div className="space-y-1.5"><Label className="text-xs">Company</Label><Input className="h-9" placeholder="Infosys" value={company} onChange={e => setCompany(e.target.value)} /></div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="space-y-1.5"><Label className="text-xs">Location</Label><Input className="h-9" placeholder="Bengaluru" value={userLocation} onChange={e => setUserLocation(e.target.value)} /></div>
-                          <div className="space-y-1.5"><Label className="text-xs">Phone</Label><Input className="h-9" type="tel" placeholder="+91..." value={phone} onChange={e => setPhone(e.target.value)} /></div>
-                        </div>
+                        <div className="space-y-1.5"><Label className="text-xs">Phone</Label><Input className="h-9" type="tel" placeholder="+91..." value={phone} onChange={e => setPhone(e.target.value)} /></div>
                         
                         {error && <p className="text-sm text-destructive font-medium bg-destructive/10 p-2 rounded">{error}</p>}
                         <Button type="submit" className="w-full h-11 text-base font-medium mt-2" disabled={loading}>

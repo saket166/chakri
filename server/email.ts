@@ -50,3 +50,27 @@ export async function sendPasswordResetEmail(email: string, name: string, resetL
       </div>`,
   });
 }
+
+export async function sendReferralRequestEmail(email: string, name: string, requesterName: string, targetCompany: string, position: string, coinsCost: number, appUrl: string) {
+  if (!resend) {
+    console.log(`[DEV] Referral request email for ${email}: ${requesterName} wants a referral at ${targetCompany}`);
+    return;
+  }
+  await resend.emails.send({
+    from: FROM,
+    to: email,
+    subject: `New referral request at ${targetCompany}`,
+    html: `
+      <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">
+        <h2 style="color:#4f46e5">Hi ${name}! 👋</h2>
+        <p><strong>${requesterName}</strong> is looking for a referral for the <strong>${position}</strong> role at <strong>${targetCompany}</strong>.</p>
+        <p>Since you work at ${targetCompany}, you can help them out and earn <strong>${Math.round(coinsCost * 1.5)} coins</strong>!</p>
+        <a href="${appUrl}/referrals"
+           style="display:inline-block;margin:24px 0;padding:12px 24px;background:#4f46e5;color:white;text-decoration:none;border-radius:8px;font-weight:600">
+          View Request
+        </a>
+        <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0"/>
+        <p style="font-size:12px;color:#9ca3af">You received this email because you are registered as working at ${targetCompany} on Chakri.</p>
+      </div>`,
+  });
+}

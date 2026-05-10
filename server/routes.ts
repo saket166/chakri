@@ -4,6 +4,7 @@ import { db } from "./db";
 import { users, referralRequests, feedItems, recommendations, directMessages, chatMessages, notifications, connectionRequests } from "@shared/schema";
 import { eq, and, or, ilike, desc, sql, inArray, ne } from "drizzle-orm";
 import { registerAuthRoutes } from "./auth";
+import { sendReferralRequestEmail } from "./email";
 import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.JWT_SECRET || "chakri-dev-secret-change-in-prod";
@@ -47,7 +48,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/users/me", async (req: Request, res: Response) => {
     const userId = getUser(req);
     if (!userId) return res.status(401).json({ error: "Unauthorized" });
-    const allowed = ["name","phone","headline","location","company","bio","avatarUrl","skills","workHistory","education","certifications"];
+    const allowed = ["name","phone","headline","location","company","bio","avatarUrl","skills","workHistory","education","certifications","onboarded"];
     const updates: Record<string, any> = {};
     allowed.forEach(k => { if (req.body[k] !== undefined) updates[k] = req.body[k]; });
     const [user] = await db.update(users).set(updates).where(eq(users.id, userId)).returning();
@@ -351,6 +352,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       targetCompany, position, location: location || "", message: message || "",
       queuePosition, coinsCost: cost, status: "open",
     }).returning();
+
+    // Notify employees at the target company
+    const APP_URL = process.env.APP_URL || "https://chakri.pro";
+    db.select({ email: users.email, name: users.name })
+      .from(users)
+      .where(and(ilike(users.company, targetCompany), ne(users.id, userId), eq(users.emailVerified, true)))
+      .then(employees => {
+        employees.forEach(emp => {
+          sendReferralRequestEmail(emp.email, emp.name, me.name, targetCompany, position, cost, APP_URL).catch(console.error);
+        });
+      }).catch(console.error);
+
     return res.json(req2);
   });
 

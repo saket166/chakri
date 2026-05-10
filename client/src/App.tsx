@@ -26,8 +26,9 @@ import ForgotPassword from "@/pages/forgot-password";
 import ResetPassword from "@/pages/reset-password";
 import NotFound from "@/pages/not-found";
 import NotificationsPage from "@/pages/notifications";
+import Onboarding from "@/pages/onboarding";
 import { useState, useEffect } from "react";
-import { isLoggedIn } from "@/lib/api";
+import { isLoggedIn, getCachedUser } from "@/lib/api";
 
 function AppLayout() {
   const [location] = useLocation();
@@ -58,6 +59,11 @@ function AppLayout() {
     if (location === "/forgot-password") return <ForgotPassword />;
     if (location === "/reset-password") return <ResetPassword />;
     return <Landing onLogin={() => setLoggedIn(true)} />;
+  }
+
+  const user = getCachedUser();
+  if (user && !user.onboarded && location !== "/onboarding") {
+    return <Onboarding />;
   }
 
   return (

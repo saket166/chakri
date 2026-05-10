@@ -24,6 +24,7 @@ export const users = pgTable("users", {
   otpCode:              text("otp_code").default(""),
   otpExpiresAt:         timestamp("otp_expires_at"),
   emailVerified:        boolean("email_verified").default(false),
+  onboarded:            boolean("onboarded").default(false),
   createdAt:            timestamp("created_at").defaultNow(),
 }, (table) => {
   return {
