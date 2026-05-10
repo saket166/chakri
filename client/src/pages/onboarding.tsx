@@ -60,7 +60,7 @@ export default function Onboarding() {
       const token = localStorage.getItem("chakri_token") || "";
       setSession(updatedUser.id, updatedUser, token);
       toast({ title: "Welcome to Chakri! 🎉" });
-      setLocation("/home");
+      window.location.href = "/home";
     } catch (e: any) {
       toast({ title: e.message || "Failed to save profile", variant: "destructive" });
     } finally {
