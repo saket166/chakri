@@ -505,9 +505,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ── Feed (randomised with recency weight, no new_member) ───────────────────
 
-  app.get("/api/feed", async (_req: Request, res: Response) => {
+  app.get("/api/feed", async (req: Request, res: Response) => {
+    const userId = getUser(req);
+    let userCreatedAt: Date | null = null;
+    if (userId) {
+      const [me] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+      if (me?.createdAt) userCreatedAt = me.createdAt;
+    }
+
+    const conditions = [sql`${feedItems.type} != 'new_member'`];
+    if (userCreatedAt) {
+      conditions.push(sql`${feedItems.createdAt} >= ${userCreatedAt}`);
+    }
+
     const items = await db.select().from(feedItems)
-      .where(sql`${feedItems.type} != 'new_member'`)
+      .where(and(...conditions))
       .orderBy(sql`(${feedItems.createdAt} + RANDOM() * INTERVAL '2 hours') DESC`)
       .limit(30);
     return res.json(items);
