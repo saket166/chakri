@@ -47,13 +47,24 @@ export default function Onboarding() {
 
   const handleComplete = async () => {
     setLoading(true);
+
+    const finalWorkHistory = [...workHistory];
+    if (expRole && expCompany) {
+      finalWorkHistory.push({ role: expRole, company: expCompany, period: expPeriod });
+    }
+
+    const finalEducation = [...education];
+    if (eduDegree && eduInst) {
+      finalEducation.push({ degree: eduDegree, institution: eduInst, year: eduYear });
+    }
+
     try {
       const updatedUser = await api.auth.update({
         headline,
         company,
         location: userLoc,
-        workHistory,
-        education,
+        workHistory: finalWorkHistory,
+        education: finalEducation,
         onboarded: true,
       });
       // Update local cache

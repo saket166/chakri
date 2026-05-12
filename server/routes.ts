@@ -133,6 +133,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // 7. Delete referral requests owned by or accepted by this user
       await db.delete(referralRequests).where(or(eq(referralRequests.requesterId, userId), eq(referralRequests.acceptedById, userId)));
 
+      // 7.5 Remove from all connected users' permanentConnections
+      const [meToDel] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+      if (meToDel) {
+        const myConns: string[] = (meToDel.permanentConnections as string[]) || [];
+        if (myConns.length > 0) {
+          const connectedUsers = await db.select().from(users).where(inArray(users.id, myConns));
+          for (const u of connectedUsers) {
+            const newConns = (u.permanentConnections as string[] || []).filter(id => id !== userId);
+            await db.update(users).set({ permanentConnections: newConns }).where(eq(users.id, u.id));
+          }
+        }
+      }
+
       // 8. Finally delete the user
       await db.delete(users).where(eq(users.id, userId));
 

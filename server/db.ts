@@ -12,8 +12,12 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false },
   max: 15, // Match Supabase's default pool size
   connectionTimeoutMillis: 10000,
-  idleTimeoutMillis: 10000, // Close idle connections quickly
+  idleTimeoutMillis: 30000, // Increase slightly for Supavisor
   keepAlive: true, // Prevent zombie connections if AWS drops idle TCP
+});
+
+pool.on('error', (err) => {
+  console.error('Unexpected database error on idle client', err);
 });
 
 export const db = drizzle(pool, { schema });

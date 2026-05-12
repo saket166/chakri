@@ -37,11 +37,7 @@ export function registerAuthRoutes(app: Express) {
     if (password.length < 6) return res.status(400).json({ error: "Password must be at least 6 characters" });
 
     try {
-      // MVP Limit
-      const [userCount] = await db.select({ count: sql<number>`CAST(COUNT(*) AS INT)` }).from(users);
-      if ((userCount?.count || 0) >= 100) {
-        return res.status(403).json({ error: "Chakri is currently in a closed MVP stage and has reached its maximum capacity. Please check back later!" });
-      }
+
 
       const trimmedEmail = email.trim().toLowerCase();
       const existing = await db.select({ id: users.id, emailVerified: users.emailVerified })
