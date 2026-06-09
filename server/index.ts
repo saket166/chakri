@@ -33,15 +33,7 @@ const authLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 200,
-  message: { error: "Too many requests. Please slow down." },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
 app.use("/api/auth", authLimiter);
-app.use("/api", apiLimiter);
 
 app.use((req, res, next) => {
   const start = Date.now();
