@@ -71,6 +71,7 @@ export const api = {
     recommendations: (userId: string) => get<any[]>(`/recommendations/${userId}`),
     companyStats: () => get<{ company: string; count: number }[]>("/users/company-stats"),
     getPublicProfile: (id: string) => get<{ user: any, connectionStatus: string }>(`/users/profile/${id}`),
+    leaderboard: () => get<any[]>("/leaderboard"),
   },
   requests: {
     list: () => get<any[]>("/requests"),

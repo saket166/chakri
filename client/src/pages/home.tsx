@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Award, Briefcase, Users, Zap, Building2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { Link } from "wouter";
+import { LeaderboardCard } from "@/components/leaderboard-card";
 
 export default function Home() {
   const [feed, setFeed] = useState<any[]>([]);
@@ -92,6 +93,9 @@ export default function Home() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Monthly Leaderboard */}
+          <LeaderboardCard />
 
           {/* Companies on Chakri */}
           <Card className="shadow-sm">

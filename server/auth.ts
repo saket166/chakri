@@ -125,10 +125,10 @@ export function registerAuthRoutes(app: Express) {
 
     try {
       const [user] = await db.select().from(users).where(ilike(users.email, email.trim())).limit(1);
-      if (!user) return res.status(401).json({ error: "Account not found." });
+      if (!user) return res.status(404).json({ error: "Account not found." });
 
       const valid = await bcrypt.compare(password, user.passwordHash || "");
-      if (!valid) return res.status(401).json({ error: "Invalid password." });
+      if (!valid) return res.status(400).json({ error: "Invalid password." });
 
       if (!user.emailVerified) {
         // Re-send OTP so they can verify

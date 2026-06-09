@@ -4,7 +4,7 @@ import { db } from "./db";
 import { users, referralRequests, feedItems, recommendations, directMessages, chatMessages, notifications, connectionRequests } from "@shared/schema";
 import { eq, and, or, ilike, desc, sql, inArray, ne } from "drizzle-orm";
 import { registerAuthRoutes } from "./auth";
-import { sendReferralRequestEmail } from "./email";
+import { sendReferralRequestEmail, sendReferralConfirmedEmail, sendConnectionRequestEmail, sendWeeklySummaryEmail } from "./email";
 import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.JWT_SECRET || "chakri-dev-secret-change-in-prod";
@@ -258,6 +258,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       linkUrl: "/connections",
     }).catch(() => {});
 
+    // Send email to recipient
+    const APP_URL = process.env.APP_URL || "https://chakri.pro";
+    db.select({ email: users.email, name: users.name })
+      .from(users)
+      .where(and(eq(users.id, toId), eq(users.emailVerified, true)))
+      .limit(1)
+      .then(recipients => {
+        if (recipients.length > 0) {
+          sendConnectionRequestEmail(recipients[0].email, recipients[0].name, me.name, APP_URL).catch(console.error);
+        }
+      }).catch(console.error);
+
     return res.json(cr);
   });
 
@@ -454,6 +466,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         body: `${updated.acceptedByName} submitted your referral for ${updated.position} at ${updated.targetCompany}.`,
         linkUrl: "/referrals",
       }).catch(() => {});
+
+      // Send email to requester
+      const APP_URL = process.env.APP_URL || "https://chakri.pro";
+      db.select({ email: users.email, name: users.name })
+        .from(users)
+        .where(and(eq(users.id, updated.requesterId), eq(users.emailVerified, true)))
+        .limit(1)
+        .then(requesters => {
+          if (requesters.length > 0) {
+            sendReferralConfirmedEmail(requesters[0].email, requesters[0].name, updated.acceptedByName || "Someone", updated.targetCompany, updated.position, APP_URL).catch(console.error);
+          }
+        }).catch(console.error);
     }
     return res.json(updated);
   });
@@ -486,6 +510,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     await db.update(referralRequests).set({ queuePosition: newPos }).where(eq(referralRequests.id, req.params.id));
     await db.update(users).set({ points: me.points - coins }).where(eq(users.id, userId));
     return res.json({ queuePosition: newPos });
+  });
+
+  // ── Monthly Leaderboard ──────────────────────────────────────────────────
+  app.get("/api/leaderboard", async (_req: Request, res: Response) => {
+    // Get start of current month
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const board = await db
+      .select({
+        userId: users.id,
+        name: users.name,
+        avatarUrl: users.avatarUrl,
+        company: users.company,
+        referralsCount: sql<number>`CAST(COUNT(${referralRequests.id}) AS INT)`,
+      })
+      .from(referralRequests)
+      .innerJoin(users, eq(users.id, referralRequests.acceptedById))
+      .where(
+        and(
+          sql`${referralRequests.status} IN ('referee_confirmed', 'completed')`,
+          sql`${referralRequests.acceptedAt} >= ${startOfMonth}`
+        )
+      )
+      .groupBy(users.id)
+      .orderBy(desc(sql`COUNT(${referralRequests.id})`))
+      .limit(5);
+
+    return res.json(board);
   });
 
   // ── Company Stats (case-insensitive grouping for bar chart) ─────────────────
@@ -676,6 +729,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/cron/expire-referrals", async (_req: Request, res: Response) => {
     await expireOverdueReferrals();
     return res.json({ ok: true });
+  });
+
+  // ── Weekly Summary Email (cron) ──────────────────────────────────────────
+  app.post("/api/cron/weekly-summary", async (req: Request, res: Response) => {
+    // In production, this should be protected by a cron secret key
+    try {
+      const APP_URL = process.env.APP_URL || "https://chakri.pro";
+      
+      // Get top 3 feed items from the last 7 days
+      const lastWeek = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      const recentFeed = await db.select().from(feedItems)
+        .where(sql`${feedItems.createdAt} >= ${lastWeek}`)
+        .orderBy(desc(feedItems.createdAt))
+        .limit(3);
+
+      // Get all active, email-verified users
+      const activeUsers = await db.select({ email: users.email, name: users.name })
+        .from(users)
+        .where(eq(users.emailVerified, true));
+
+      let emailsSent = 0;
+      for (const u of activeUsers) {
+        await sendWeeklySummaryEmail(u.email, u.name, recentFeed, APP_URL).catch(console.error);
+        emailsSent++;
+      }
+
+      return res.json({ ok: true, sent: emailsSent });
+    } catch (e: any) {
+      console.error("[cron] Weekly summary error:", e);
+      return res.status(500).json({ error: e.message });
+    }
   });
 
   const httpServer = createServer(app);
