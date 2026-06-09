@@ -31,7 +31,7 @@ export function LeaderboardCard() {
           const initials = (user.name || "?").split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase();
           return (
             <div key={user.userId} className="flex items-center justify-between">
-              <Link href={`/profile/${user.userId}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+              <Link href={`/user/${user.userId}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
                 <div className="relative">
                   <Avatar className="h-9 w-9 border border-background shadow-sm">
                     {user.avatarUrl && <AvatarImage src={user.avatarUrl} alt={user.name} className="object-cover" />}
