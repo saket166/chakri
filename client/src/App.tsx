@@ -27,6 +27,8 @@ import ResetPassword from "@/pages/reset-password";
 import NotFound from "@/pages/not-found";
 import NotificationsPage from "@/pages/notifications";
 import Onboarding from "@/pages/onboarding";
+import CurateNewsletter from "@/pages/curate-newsletter";
+import TriggerNewsletter from "@/pages/trigger-newsletter";
 import { useState, useEffect } from "react";
 import { isLoggedIn, getCachedUser } from "@/lib/api";
 
@@ -100,6 +102,8 @@ function AppLayout() {
               <Route path="/terms"          component={Terms} />
               <Route path="/privacy"        component={Privacy} />
               <Route path="/contact"        component={Contact} />
+              <Route path="/curate-newsletter"      component={CurateNewsletter} />
+              <Route path="/admin/trigger-newsletter" component={TriggerNewsletter} />
               <Route component={NotFound} />
             </Switch>
           </main>

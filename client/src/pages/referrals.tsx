@@ -309,6 +309,26 @@ export default function Referrals() {
     return () => clearTimeout(timer);
   }, [form.targetCompany]);
 
+  // Auto-generate template message
+  useEffect(() => {
+    if (!showNewDialog) return;
+    const companyName = form.targetCompany.trim() || "[Company]";
+    const roleName = form.position.trim() || "[Role]";
+    const userName = (me?.name || "there").split(" ")[0];
+    const userHeadline = me?.headline || "[Job Title]";
+    
+    const template = `Hi there, I noticed you work at ${companyName}. I am a ${userHeadline}. I am highly interested in the ${roleName} role. My profile and resume are attached. Would love your support for a referral!
+
+Thanks, ${userName}`;
+
+    setForm(p => {
+      if (!p.message || p.message.startsWith("Hi there, I noticed you work at")) {
+        return { ...p, message: template };
+      }
+      return p;
+    });
+  }, [form.targetCompany, form.position, me, showNewDialog]);
+
   const reload = async () => {
     const [reqs, user] = await Promise.all([
       api.requests.list().catch(() => []),

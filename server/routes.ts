@@ -4,8 +4,31 @@ import { db } from "./db";
 import { users, referralRequests, feedItems, recommendations, directMessages, chatMessages, notifications, connectionRequests } from "@shared/schema";
 import { eq, and, or, ilike, desc, sql, inArray, ne } from "drizzle-orm";
 import { registerAuthRoutes } from "./auth";
-import { sendReferralRequestEmail, sendReferralConfirmedEmail, sendConnectionRequestEmail, sendWeeklySummaryEmail } from "./email";
+import { sendReferralRequestEmail, sendReferralConfirmedEmail, sendConnectionRequestEmail, sendWeeklySummaryEmail, sendPendingRequestNudgeEmail, sendNewsletterBlast } from "./email";
 import jwt from "jsonwebtoken";
+import fs from "fs/promises";
+import path from "path";
+
+const ADMIN_EMAIL = "saketengland@gmail.com";
+const NEWSLETTER_QUEUE_FILE = path.join(process.cwd(), "server", "newsletter_queue.json");
+
+// Ensure queue file exists
+async function getNewsletterQueue() {
+  try {
+    const data = await fs.readFile(NEWSLETTER_QUEUE_FILE, "utf-8");
+    return JSON.parse(data);
+  } catch (e: any) {
+    if (e.code === "ENOENT") {
+      await fs.writeFile(NEWSLETTER_QUEUE_FILE, JSON.stringify([]));
+      return [];
+    }
+    throw e;
+  }
+}
+
+async function saveNewsletterQueue(queue: any[]) {
+  await fs.writeFile(NEWSLETTER_QUEUE_FILE, JSON.stringify(queue, null, 2));
+}
 
 const JWT_SECRET = process.env.JWT_SECRET || "chakri-dev-secret-change-in-prod";
 
@@ -731,6 +754,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return res.json({ ok: true });
   });
 
+  // ── Nudge Pending Referrals (cron) ─────────────────────────────────────────
+  const nudgePendingReferrals = async () => {
+    const twoDaysAgo = new Date(Date.now() - 48 * 3600000);
+    const staleRequests = await db.select().from(referralRequests).where(
+      and(
+        eq(referralRequests.status, "open"),
+        sql`${referralRequests.createdAt} < ${twoDaysAgo}`,
+        sql`${referralRequests.createdAt} > ${new Date(Date.now() - 72 * 3600000)}` // Only nudge once between 48h and 72h
+      )
+    );
+    
+    if (staleRequests.length === 0) return;
+    const APP_URL = process.env.APP_URL || "https://chakri.pro";
+    
+    for (const r of staleRequests) {
+      const companyEmployees = await db.select({ email: users.email, name: users.name }).from(users).where(
+        and(ilike(users.company, r.targetCompany), eq(users.emailVerified, true))
+      );
+      for (const emp of companyEmployees) {
+        await sendPendingRequestNudgeEmail(emp.email, emp.name, r.requesterName, r.position, r.targetCompany, r.coinsCost, APP_URL).catch(console.error);
+      }
+    }
+    console.log(`[cron] Nudged employees for ${staleRequests.length} pending referral(s)`);
+  };
+
+  // Run pending nudges every hour
+  setInterval(() => nudgePendingReferrals().catch(console.error), 60 * 60 * 1000);
+
+  app.post("/api/cron/nudge-pending", async (_req: Request, res: Response) => {
+    await nudgePendingReferrals();
+    return res.json({ ok: true });
+  });
+
   // ── Weekly Summary Email (cron) ──────────────────────────────────────────
   app.post("/api/cron/weekly-summary", async (req: Request, res: Response) => {
     // In production, this should be protected by a cron secret key
@@ -758,6 +814,111 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.json({ ok: true, sent: emailsSent });
     } catch (e: any) {
       console.error("[cron] Weekly summary error:", e);
+      return res.status(500).json({ error: e.message });
+    }
+  });
+
+  // ── Liquidity Metrics ──────────────────────────────────────────────────────
+  app.get("/api/metrics/liquidity", async (req: Request, res: Response) => {
+    // Note: In production, this should be an admin-only route
+    try {
+      // 1. Activation Rate
+      const totalUsersQuery = await db.select({ count: sql<number>`CAST(COUNT(*) AS INT)` }).from(users);
+      const totalUsers = totalUsersQuery[0]?.count || 0;
+
+      const activatedUsersQuery = await db.select({ count: sql<number>`CAST(COUNT(DISTINCT ${referralRequests.requesterId}) AS INT)` })
+        .from(referralRequests);
+      const activatedUsers = activatedUsersQuery[0]?.count || 0;
+
+      const activationRate = totalUsers > 0 ? (activatedUsers / totalUsers) * 100 : 0;
+
+      // 2. Response Rate
+      const totalRequestsQuery = await db.select({ count: sql<number>`CAST(COUNT(*) AS INT)` }).from(referralRequests);
+      const totalRequests = totalRequestsQuery[0]?.count || 0;
+
+      const respondedRequestsQuery = await db.select({ count: sql<number>`CAST(COUNT(*) AS INT)` })
+        .from(referralRequests)
+        .where(ne(referralRequests.status, "open"));
+      const respondedRequests = respondedRequestsQuery[0]?.count || 0;
+
+      const responseRate = totalRequests > 0 ? (respondedRequests / totalRequests) * 100 : 0;
+
+      return res.json({
+        activationRate: {
+          rate: Number(activationRate.toFixed(2)),
+          activatedUsers,
+          totalUsers
+        },
+        responseRate: {
+          rate: Number(responseRate.toFixed(2)),
+          respondedRequests,
+          totalRequests
+        }
+      });
+    } catch (e: any) {
+      return res.status(500).json({ error: e.message });
+    }
+  });
+
+  // ── Newsletter System (Hardcoded Auth) ──────────────────────────────────
+  app.get("/api/newsletter/queue", async (req: Request, res: Response) => {
+    const userId = getUser(req);
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
+    const [me] = await db.select({ email: users.email }).from(users).where(eq(users.id, userId)).limit(1);
+    if (!me || me.email !== ADMIN_EMAIL) return res.status(403).json({ error: "Forbidden" });
+
+    const queue = await getNewsletterQueue();
+    return res.json(queue);
+  });
+
+  app.post("/api/newsletter/queue", async (req: Request, res: Response) => {
+    const userId = getUser(req);
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
+    const [me] = await db.select({ email: users.email }).from(users).where(eq(users.id, userId)).limit(1);
+    if (!me || me.email !== ADMIN_EMAIL) return res.status(403).json({ error: "Forbidden" });
+
+    const job = {
+      id: Date.now().toString(),
+      companyName: req.body.companyName || "",
+      roleTitle: req.body.roleTitle || "",
+      jobLink: req.body.jobLink || "",
+      referrerName: req.body.referrerName || "",
+      requiredSkills: req.body.requiredSkills || "",
+      createdAt: new Date().toISOString()
+    };
+
+    const queue = await getNewsletterQueue();
+    queue.push(job);
+    await saveNewsletterQueue(queue);
+
+    return res.json(job);
+  });
+
+  app.post("/api/newsletter/trigger", async (req: Request, res: Response) => {
+    const userId = getUser(req);
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
+    const [me] = await db.select({ email: users.email }).from(users).where(eq(users.id, userId)).limit(1);
+    if (!me || me.email !== ADMIN_EMAIL) return res.status(403).json({ error: "Forbidden" });
+
+    try {
+      const queue = await getNewsletterQueue();
+      if (queue.length === 0) return res.status(400).json({ error: "Queue is empty. Add jobs first." });
+
+      const verifiedUsers = await db.select({ email: users.email, name: users.name }).from(users).where(eq(users.emailVerified, true));
+      if (verifiedUsers.length === 0) return res.status(400).json({ error: "No verified users found." });
+
+      let sent = 0;
+      for (const u of verifiedUsers) {
+        await sendNewsletterBlast(u.email, u.name, queue).catch(console.error);
+        sent++;
+      }
+
+      // Flush queue
+      await saveNewsletterQueue([]);
+
+      return res.json({ ok: true, sent, jobsIncluded: queue.length });
+    } catch (e: any) {
+      console.error("[Newsletter] Error:", e);
       return res.status(500).json({ error: e.message });
     }
   });

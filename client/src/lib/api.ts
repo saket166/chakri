@@ -96,6 +96,11 @@ export const api = {
     list: (requestId: string) => get<any[]>(`/chat/${requestId}`),
     send: (requestId: string, text: string) => post<any>(`/chat/${requestId}`, { text }),
   },
+  newsletter: {
+    queue: () => get<any[]>("/newsletter/queue"),
+    addJob: (data: any) => post<any>("/newsletter/queue", data),
+    trigger: () => post<any>("/newsletter/trigger"),
+  },
 };
 
 // ── Session helpers ─────────────────────────────────────────────────────────
