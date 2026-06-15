@@ -1,0 +1,962 @@
+[
+  {
+    "id": "ag_agent_1781549544958_1000",
+    "companyName": "3PS Media India Pvt. Ltd.",
+    "roleTitle": "Senior Software Engineer",
+    "jobLink": "https://www.google.com/search?q=3PS%20Media%20India%20Pvt.%20Ltd.%20Senior%20Software%20Engineer%20careers%20india",
+    "category": "Software Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "React, Node.js, TypeScript, PostgreSQL",
+    "postedAt": "2026-06-15T18:52:24.958Z"
+  },
+  {
+    "id": "ag_agent_1781549544958_1001",
+    "companyName": "Zenceed Technologies",
+    "roleTitle": "Senior Software Engineer",
+    "jobLink": "https://www.google.com/search?q=Zenceed%20Technologies%20Senior%20Software%20Engineer%20careers%20india",
+    "category": "Software Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "React, Node.js, TypeScript, PostgreSQL",
+    "postedAt": "2026-06-15T18:52:24.958Z"
+  },
+  {
+    "id": "ag_agent_1781549544958_1002",
+    "companyName": "Zenceed Technologies",
+    "roleTitle": "Data Engineer",
+    "jobLink": "https://www.google.com/search?q=Zenceed%20Technologies%20Data%20Engineer%20careers%20india",
+    "category": "Data Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "Python, SQL, AWS, Apache Spark, Airflow",
+    "postedAt": "2026-06-15T18:52:24.958Z"
+  },
+  {
+    "id": "ag_agent_1781549544958_1003",
+    "companyName": "Zenceed Technologies",
+    "roleTitle": "Data Scientist",
+    "jobLink": "https://www.google.com/search?q=Zenceed%20Technologies%20Data%20Scientist%20careers%20india",
+    "category": "Data Scientist",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "Python, TensorFlow, PyTorch, SQL, Pandas",
+    "postedAt": "2026-06-15T18:52:24.958Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1004",
+    "companyName": "Fiverr",
+    "roleTitle": "Full Stack Developer",
+    "jobLink": "https://www.google.com/search?q=Fiverr%20Full%20Stack%20Developer%20careers%20india",
+    "category": "Software Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "React, Node.js, Next.js, Tailwind CSS",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1005",
+    "companyName": "Practo Technologies Pvt Ltd",
+    "roleTitle": "Full Stack Developer",
+    "jobLink": "https://www.google.com/search?q=Practo%20Technologies%20Pvt%20Ltd%20Full%20Stack%20Developer%20careers%20india",
+    "category": "Software Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "React, Node.js, Next.js, Tailwind CSS",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1006",
+    "companyName": "Practo Technologies Pvt Ltd",
+    "roleTitle": "Senior Software Engineer",
+    "jobLink": "https://www.google.com/search?q=Practo%20Technologies%20Pvt%20Ltd%20Senior%20Software%20Engineer%20careers%20india",
+    "category": "Software Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "React, Node.js, TypeScript, PostgreSQL",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1007",
+    "companyName": "Mu Sigma",
+    "roleTitle": "Machine Learning Engineer",
+    "jobLink": "https://www.google.com/search?q=Mu%20Sigma%20Machine%20Learning%20Engineer%20careers%20india",
+    "category": "Data Scientist",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "Python, AWS SageMaker, MLflow, Scikit-learn",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1008",
+    "companyName": "Mamaearth",
+    "roleTitle": "Senior Software Engineer",
+    "jobLink": "https://www.google.com/search?q=Mamaearth%20Senior%20Software%20Engineer%20careers%20india",
+    "category": "Software Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "React, Node.js, TypeScript, PostgreSQL",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1009",
+    "companyName": "Mamaearth",
+    "roleTitle": "Machine Learning Engineer",
+    "jobLink": "https://www.google.com/search?q=Mamaearth%20Machine%20Learning%20Engineer%20careers%20india",
+    "category": "Data Scientist",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "Python, AWS SageMaker, MLflow, Scikit-learn",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1010",
+    "companyName": "Mamaearth",
+    "roleTitle": "Data Engineer",
+    "jobLink": "https://www.google.com/search?q=Mamaearth%20Data%20Engineer%20careers%20india",
+    "category": "Data Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "Python, SQL, AWS, Apache Spark, Airflow",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1011",
+    "companyName": "EXL Services",
+    "roleTitle": "Senior Software Engineer",
+    "jobLink": "https://www.google.com/search?q=EXL%20Services%20Senior%20Software%20Engineer%20careers%20india",
+    "category": "Software Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "React, Node.js, TypeScript, PostgreSQL",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1012",
+    "companyName": "Windy Street Advisory LLP",
+    "roleTitle": "Data Engineer",
+    "jobLink": "https://www.google.com/search?q=Windy%20Street%20Advisory%20LLP%20Data%20Engineer%20careers%20india",
+    "category": "Data Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "Python, SQL, AWS, Apache Spark, Airflow",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1013",
+    "companyName": "Windy Street Advisory LLP",
+    "roleTitle": "Machine Learning Engineer",
+    "jobLink": "https://www.google.com/search?q=Windy%20Street%20Advisory%20LLP%20Machine%20Learning%20Engineer%20careers%20india",
+    "category": "Data Scientist",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "Python, AWS SageMaker, MLflow, Scikit-learn",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1014",
+    "companyName": "Windy Street Advisory LLP",
+    "roleTitle": "Senior Software Engineer",
+    "jobLink": "https://www.google.com/search?q=Windy%20Street%20Advisory%20LLP%20Senior%20Software%20Engineer%20careers%20india",
+    "category": "Software Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "React, Node.js, TypeScript, PostgreSQL",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1015",
+    "companyName": "Transaction Network Services",
+    "roleTitle": "Senior Software Engineer",
+    "jobLink": "https://www.google.com/search?q=Transaction%20Network%20Services%20Senior%20Software%20Engineer%20careers%20india",
+    "category": "Software Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "React, Node.js, TypeScript, PostgreSQL",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1016",
+    "companyName": "TechCircle (HT Media Ltd.)",
+    "roleTitle": "Senior Software Engineer",
+    "jobLink": "https://www.google.com/search?q=TechCircle%20(HT%20Media%20Ltd.)%20Senior%20Software%20Engineer%20careers%20india",
+    "category": "Software Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "React, Node.js, TypeScript, PostgreSQL",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1017",
+    "companyName": "TechCircle (HT Media Ltd.)",
+    "roleTitle": "Data Engineer",
+    "jobLink": "https://www.google.com/search?q=TechCircle%20(HT%20Media%20Ltd.)%20Data%20Engineer%20careers%20india",
+    "category": "Data Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "Python, SQL, AWS, Apache Spark, Airflow",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1018",
+    "companyName": "Ernst and Young India",
+    "roleTitle": "Senior Software Engineer",
+    "jobLink": "https://www.google.com/search?q=Ernst%20and%20Young%20India%20Senior%20Software%20Engineer%20careers%20india",
+    "category": "Software Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "React, Node.js, TypeScript, PostgreSQL",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1019",
+    "companyName": "Dunnhumby",
+    "roleTitle": "Senior Software Engineer",
+    "jobLink": "https://www.google.com/search?q=Dunnhumby%20Senior%20Software%20Engineer%20careers%20india",
+    "category": "Software Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "React, Node.js, TypeScript, PostgreSQL",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1020",
+    "companyName": "Ecolab",
+    "roleTitle": "Senior Software Engineer",
+    "jobLink": "https://www.google.com/search?q=Ecolab%20Senior%20Software%20Engineer%20careers%20india",
+    "category": "Software Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "React, Node.js, TypeScript, PostgreSQL",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1021",
+    "companyName": "7Tech",
+    "roleTitle": "Machine Learning Engineer",
+    "jobLink": "https://www.google.com/search?q=7Tech%20Machine%20Learning%20Engineer%20careers%20india",
+    "category": "Data Scientist",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "Python, AWS SageMaker, MLflow, Scikit-learn",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1022",
+    "companyName": "7Tech",
+    "roleTitle": "Full Stack Developer",
+    "jobLink": "https://www.google.com/search?q=7Tech%20Full%20Stack%20Developer%20careers%20india",
+    "category": "Software Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "React, Node.js, Next.js, Tailwind CSS",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1023",
+    "companyName": "7Tech",
+    "roleTitle": "Data Scientist",
+    "jobLink": "https://www.google.com/search?q=7Tech%20Data%20Scientist%20careers%20india",
+    "category": "Data Scientist",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "Python, TensorFlow, PyTorch, SQL, Pandas",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1024",
+    "companyName": "Accenture Strategy",
+    "roleTitle": "Senior Software Engineer",
+    "jobLink": "https://www.google.com/search?q=Accenture%20Strategy%20Senior%20Software%20Engineer%20careers%20india",
+    "category": "Software Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "React, Node.js, TypeScript, PostgreSQL",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1025",
+    "companyName": "Accenture Strategy",
+    "roleTitle": "Data Engineer",
+    "jobLink": "https://www.google.com/search?q=Accenture%20Strategy%20Data%20Engineer%20careers%20india",
+    "category": "Data Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "Python, SQL, AWS, Apache Spark, Airflow",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1026",
+    "companyName": "samata ai",
+    "roleTitle": "Machine Learning Engineer",
+    "jobLink": "https://www.google.com/search?q=samata%20ai%20Machine%20Learning%20Engineer%20careers%20india",
+    "category": "Data Scientist",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "Python, AWS SageMaker, MLflow, Scikit-learn",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1027",
+    "companyName": "KPMG",
+    "roleTitle": "Senior Software Engineer",
+    "jobLink": "https://www.google.com/search?q=KPMG%20Senior%20Software%20Engineer%20careers%20india",
+    "category": "Software Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "React, Node.js, TypeScript, PostgreSQL",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1028",
+    "companyName": "KPMG",
+    "roleTitle": "Data Engineer",
+    "jobLink": "https://www.google.com/search?q=KPMG%20Data%20Engineer%20careers%20india",
+    "category": "Data Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "Python, SQL, AWS, Apache Spark, Airflow",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1029",
+    "companyName": "KPMG",
+    "roleTitle": "Data Scientist",
+    "jobLink": "https://www.google.com/search?q=KPMG%20Data%20Scientist%20careers%20india",
+    "category": "Data Scientist",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "Python, TensorFlow, PyTorch, SQL, Pandas",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1030",
+    "companyName": "Capgemini",
+    "roleTitle": "Full Stack Developer",
+    "jobLink": "https://www.google.com/search?q=Capgemini%20Full%20Stack%20Developer%20careers%20india",
+    "category": "Software Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "React, Node.js, Next.js, Tailwind CSS",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1031",
+    "companyName": "Capgemini",
+    "roleTitle": "Senior Software Engineer",
+    "jobLink": "https://www.google.com/search?q=Capgemini%20Senior%20Software%20Engineer%20careers%20india",
+    "category": "Software Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "React, Node.js, TypeScript, PostgreSQL",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1032",
+    "companyName": "Vimo",
+    "roleTitle": "Data Scientist",
+    "jobLink": "https://www.google.com/search?q=Vimo%20Data%20Scientist%20careers%20india",
+    "category": "Data Scientist",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "Python, TensorFlow, PyTorch, SQL, Pandas",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1033",
+    "companyName": "Vimo",
+    "roleTitle": "Machine Learning Engineer",
+    "jobLink": "https://www.google.com/search?q=Vimo%20Machine%20Learning%20Engineer%20careers%20india",
+    "category": "Data Scientist",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "Python, AWS SageMaker, MLflow, Scikit-learn",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1034",
+    "companyName": "Vimo",
+    "roleTitle": "Full Stack Developer",
+    "jobLink": "https://www.google.com/search?q=Vimo%20Full%20Stack%20Developer%20careers%20india",
+    "category": "Software Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "React, Node.js, Next.js, Tailwind CSS",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1035",
+    "companyName": "EY",
+    "roleTitle": "Senior Software Engineer",
+    "jobLink": "https://www.google.com/search?q=EY%20Senior%20Software%20Engineer%20careers%20india",
+    "category": "Software Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "React, Node.js, TypeScript, PostgreSQL",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1036",
+    "companyName": "EY",
+    "roleTitle": "Data Engineer",
+    "jobLink": "https://www.google.com/search?q=EY%20Data%20Engineer%20careers%20india",
+    "category": "Data Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "Python, SQL, AWS, Apache Spark, Airflow",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1037",
+    "companyName": "EY",
+    "roleTitle": "Full Stack Developer",
+    "jobLink": "https://www.google.com/search?q=EY%20Full%20Stack%20Developer%20careers%20india",
+    "category": "Software Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "React, Node.js, Next.js, Tailwind CSS",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1038",
+    "companyName": "phData",
+    "roleTitle": "Full Stack Developer",
+    "jobLink": "https://www.google.com/search?q=phData%20Full%20Stack%20Developer%20careers%20india",
+    "category": "Software Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "React, Node.js, Next.js, Tailwind CSS",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1039",
+    "companyName": "phData",
+    "roleTitle": "Machine Learning Engineer",
+    "jobLink": "https://www.google.com/search?q=phData%20Machine%20Learning%20Engineer%20careers%20india",
+    "category": "Data Scientist",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "Python, AWS SageMaker, MLflow, Scikit-learn",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1040",
+    "companyName": "Prodapt",
+    "roleTitle": "Senior Software Engineer",
+    "jobLink": "https://www.google.com/search?q=Prodapt%20Senior%20Software%20Engineer%20careers%20india",
+    "category": "Software Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "React, Node.js, TypeScript, PostgreSQL",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1041",
+    "companyName": "Prodapt",
+    "roleTitle": "Full Stack Developer",
+    "jobLink": "https://www.google.com/search?q=Prodapt%20Full%20Stack%20Developer%20careers%20india",
+    "category": "Software Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "React, Node.js, Next.js, Tailwind CSS",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1042",
+    "companyName": "Prodapt",
+    "roleTitle": "Machine Learning Engineer",
+    "jobLink": "https://www.google.com/search?q=Prodapt%20Machine%20Learning%20Engineer%20careers%20india",
+    "category": "Data Scientist",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "Python, AWS SageMaker, MLflow, Scikit-learn",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1043",
+    "companyName": "Forbes Advisor",
+    "roleTitle": "Machine Learning Engineer",
+    "jobLink": "https://www.google.com/search?q=Forbes%20Advisor%20Machine%20Learning%20Engineer%20careers%20india",
+    "category": "Data Scientist",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "Python, AWS SageMaker, MLflow, Scikit-learn",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1044",
+    "companyName": "Forbes Advisor",
+    "roleTitle": "Senior Software Engineer",
+    "jobLink": "https://www.google.com/search?q=Forbes%20Advisor%20Senior%20Software%20Engineer%20careers%20india",
+    "category": "Software Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "React, Node.js, TypeScript, PostgreSQL",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1045",
+    "companyName": "Exl Service",
+    "roleTitle": "Full Stack Developer",
+    "jobLink": "https://www.google.com/search?q=Exl%20Service%20Full%20Stack%20Developer%20careers%20india",
+    "category": "Software Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "React, Node.js, Next.js, Tailwind CSS",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1046",
+    "companyName": "Exl Service",
+    "roleTitle": "Data Scientist",
+    "jobLink": "https://www.google.com/search?q=Exl%20Service%20Data%20Scientist%20careers%20india",
+    "category": "Data Scientist",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "Python, TensorFlow, PyTorch, SQL, Pandas",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1047",
+    "companyName": "Exl Service",
+    "roleTitle": "Data Engineer",
+    "jobLink": "https://www.google.com/search?q=Exl%20Service%20Data%20Engineer%20careers%20india",
+    "category": "Data Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "Python, SQL, AWS, Apache Spark, Airflow",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1048",
+    "companyName": "Trajector",
+    "roleTitle": "Full Stack Developer",
+    "jobLink": "https://www.google.com/search?q=Trajector%20Full%20Stack%20Developer%20careers%20india",
+    "category": "Software Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "React, Node.js, Next.js, Tailwind CSS",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1049",
+    "companyName": "Trajector",
+    "roleTitle": "Senior Software Engineer",
+    "jobLink": "https://www.google.com/search?q=Trajector%20Senior%20Software%20Engineer%20careers%20india",
+    "category": "Software Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "React, Node.js, TypeScript, PostgreSQL",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1050",
+    "companyName": "Deloitte",
+    "roleTitle": "Data Engineer",
+    "jobLink": "https://www.google.com/search?q=Deloitte%20Data%20Engineer%20careers%20india",
+    "category": "Data Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "Python, SQL, AWS, Apache Spark, Airflow",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1051",
+    "companyName": "Genpact",
+    "roleTitle": "Machine Learning Engineer",
+    "jobLink": "https://www.google.com/search?q=Genpact%20Machine%20Learning%20Engineer%20careers%20india",
+    "category": "Data Scientist",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "Python, AWS SageMaker, MLflow, Scikit-learn",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1052",
+    "companyName": "Genpact",
+    "roleTitle": "Full Stack Developer",
+    "jobLink": "https://www.google.com/search?q=Genpact%20Full%20Stack%20Developer%20careers%20india",
+    "category": "Software Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "React, Node.js, Next.js, Tailwind CSS",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1053",
+    "companyName": "Genpact",
+    "roleTitle": "Data Scientist",
+    "jobLink": "https://www.google.com/search?q=Genpact%20Data%20Scientist%20careers%20india",
+    "category": "Data Scientist",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "Python, TensorFlow, PyTorch, SQL, Pandas",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1054",
+    "companyName": "Opentext",
+    "roleTitle": "Machine Learning Engineer",
+    "jobLink": "https://www.google.com/search?q=Opentext%20Machine%20Learning%20Engineer%20careers%20india",
+    "category": "Data Scientist",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "Python, AWS SageMaker, MLflow, Scikit-learn",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1055",
+    "companyName": "Opentext",
+    "roleTitle": "Senior Software Engineer",
+    "jobLink": "https://www.google.com/search?q=Opentext%20Senior%20Software%20Engineer%20careers%20india",
+    "category": "Software Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "React, Node.js, TypeScript, PostgreSQL",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1056",
+    "companyName": "Globallogic",
+    "roleTitle": "Machine Learning Engineer",
+    "jobLink": "https://www.google.com/search?q=Globallogic%20Machine%20Learning%20Engineer%20careers%20india",
+    "category": "Data Scientist",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "Python, AWS SageMaker, MLflow, Scikit-learn",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1057",
+    "companyName": "Globallogic",
+    "roleTitle": "Full Stack Developer",
+    "jobLink": "https://www.google.com/search?q=Globallogic%20Full%20Stack%20Developer%20careers%20india",
+    "category": "Software Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "React, Node.js, Next.js, Tailwind CSS",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1058",
+    "companyName": "a2z",
+    "roleTitle": "Data Scientist",
+    "jobLink": "https://www.google.com/search?q=a2z%20Data%20Scientist%20careers%20india",
+    "category": "Data Scientist",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "Python, TensorFlow, PyTorch, SQL, Pandas",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1059",
+    "companyName": "a2z",
+    "roleTitle": "Data Engineer",
+    "jobLink": "https://www.google.com/search?q=a2z%20Data%20Engineer%20careers%20india",
+    "category": "Data Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "Python, SQL, AWS, Apache Spark, Airflow",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1060",
+    "companyName": "Ernst & Young",
+    "roleTitle": "Full Stack Developer",
+    "jobLink": "https://www.google.com/search?q=Ernst%20%26%20Young%20Full%20Stack%20Developer%20careers%20india",
+    "category": "Software Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "React, Node.js, Next.js, Tailwind CSS",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1061",
+    "companyName": "Tcs",
+    "roleTitle": "Machine Learning Engineer",
+    "jobLink": "https://www.google.com/search?q=Tcs%20Machine%20Learning%20Engineer%20careers%20india",
+    "category": "Data Scientist",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "Python, AWS SageMaker, MLflow, Scikit-learn",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1062",
+    "companyName": "Primesoft",
+    "roleTitle": "Senior Software Engineer",
+    "jobLink": "https://www.google.com/search?q=Primesoft%20Senior%20Software%20Engineer%20careers%20india",
+    "category": "Software Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "React, Node.js, TypeScript, PostgreSQL",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1063",
+    "companyName": "LTM",
+    "roleTitle": "Machine Learning Engineer",
+    "jobLink": "https://www.google.com/search?q=LTM%20Machine%20Learning%20Engineer%20careers%20india",
+    "category": "Data Scientist",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "Python, AWS SageMaker, MLflow, Scikit-learn",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1064",
+    "companyName": "LTM",
+    "roleTitle": "Senior Software Engineer",
+    "jobLink": "https://www.google.com/search?q=LTM%20Senior%20Software%20Engineer%20careers%20india",
+    "category": "Software Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "React, Node.js, TypeScript, PostgreSQL",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1065",
+    "companyName": "Infosys",
+    "roleTitle": "Full Stack Developer",
+    "jobLink": "https://www.google.com/search?q=Infosys%20Full%20Stack%20Developer%20careers%20india",
+    "category": "Software Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "React, Node.js, Next.js, Tailwind CSS",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1066",
+    "companyName": "Infosys",
+    "roleTitle": "Data Engineer",
+    "jobLink": "https://www.google.com/search?q=Infosys%20Data%20Engineer%20careers%20india",
+    "category": "Data Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "Python, SQL, AWS, Apache Spark, Airflow",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1067",
+    "companyName": "Infosys",
+    "roleTitle": "Senior Software Engineer",
+    "jobLink": "https://www.google.com/search?q=Infosys%20Senior%20Software%20Engineer%20careers%20india",
+    "category": "Software Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "React, Node.js, TypeScript, PostgreSQL",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1068",
+    "companyName": "Consulting Engineers Group Ltd",
+    "roleTitle": "Senior Software Engineer",
+    "jobLink": "https://www.google.com/search?q=Consulting%20Engineers%20Group%20Ltd%20Senior%20Software%20Engineer%20careers%20india",
+    "category": "Software Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "React, Node.js, TypeScript, PostgreSQL",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1069",
+    "companyName": "Paytm",
+    "roleTitle": "Data Engineer",
+    "jobLink": "https://www.google.com/search?q=Paytm%20Data%20Engineer%20careers%20india",
+    "category": "Data Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "Python, SQL, AWS, Apache Spark, Airflow",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1070",
+    "companyName": "Kellanova",
+    "roleTitle": "Machine Learning Engineer",
+    "jobLink": "https://www.google.com/search?q=Kellanova%20Machine%20Learning%20Engineer%20careers%20india",
+    "category": "Data Scientist",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "Python, AWS SageMaker, MLflow, Scikit-learn",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1071",
+    "companyName": "Kellanova",
+    "roleTitle": "Full Stack Developer",
+    "jobLink": "https://www.google.com/search?q=Kellanova%20Full%20Stack%20Developer%20careers%20india",
+    "category": "Software Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "React, Node.js, Next.js, Tailwind CSS",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1072",
+    "companyName": "Intuit",
+    "roleTitle": "Machine Learning Engineer",
+    "jobLink": "https://www.google.com/search?q=Intuit%20Machine%20Learning%20Engineer%20careers%20india",
+    "category": "Data Scientist",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "Python, AWS SageMaker, MLflow, Scikit-learn",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1073",
+    "companyName": "Wiser",
+    "roleTitle": "Machine Learning Engineer",
+    "jobLink": "https://www.google.com/search?q=Wiser%20Machine%20Learning%20Engineer%20careers%20india",
+    "category": "Data Scientist",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "Python, AWS SageMaker, MLflow, Scikit-learn",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1074",
+    "companyName": "Target",
+    "roleTitle": "Senior Software Engineer",
+    "jobLink": "https://www.google.com/search?q=Target%20Senior%20Software%20Engineer%20careers%20india",
+    "category": "Software Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "React, Node.js, TypeScript, PostgreSQL",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1075",
+    "companyName": "Accenture",
+    "roleTitle": "Data Engineer",
+    "jobLink": "https://www.google.com/search?q=Accenture%20Data%20Engineer%20careers%20india",
+    "category": "Data Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "Python, SQL, AWS, Apache Spark, Airflow",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1076",
+    "companyName": "Accenture",
+    "roleTitle": "Senior Software Engineer",
+    "jobLink": "https://www.google.com/search?q=Accenture%20Senior%20Software%20Engineer%20careers%20india",
+    "category": "Software Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "React, Node.js, TypeScript, PostgreSQL",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1077",
+    "companyName": "NPCI",
+    "roleTitle": "Data Engineer",
+    "jobLink": "https://www.google.com/search?q=NPCI%20Data%20Engineer%20careers%20india",
+    "category": "Data Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "Python, SQL, AWS, Apache Spark, Airflow",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1078",
+    "companyName": "NPCI",
+    "roleTitle": "Machine Learning Engineer",
+    "jobLink": "https://www.google.com/search?q=NPCI%20Machine%20Learning%20Engineer%20careers%20india",
+    "category": "Data Scientist",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "Python, AWS SageMaker, MLflow, Scikit-learn",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1079",
+    "companyName": "NPCI",
+    "roleTitle": "Senior Software Engineer",
+    "jobLink": "https://www.google.com/search?q=NPCI%20Senior%20Software%20Engineer%20careers%20india",
+    "category": "Software Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "React, Node.js, TypeScript, PostgreSQL",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1080",
+    "companyName": "HCLTech",
+    "roleTitle": "Senior Software Engineer",
+    "jobLink": "https://www.google.com/search?q=HCLTech%20Senior%20Software%20Engineer%20careers%20india",
+    "category": "Software Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "React, Node.js, TypeScript, PostgreSQL",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1081",
+    "companyName": "HCLTech",
+    "roleTitle": "Data Engineer",
+    "jobLink": "https://www.google.com/search?q=HCLTech%20Data%20Engineer%20careers%20india",
+    "category": "Data Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "Python, SQL, AWS, Apache Spark, Airflow",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1082",
+    "companyName": "HCLTech",
+    "roleTitle": "Data Scientist",
+    "jobLink": "https://www.google.com/search?q=HCLTech%20Data%20Scientist%20careers%20india",
+    "category": "Data Scientist",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "Python, TensorFlow, PyTorch, SQL, Pandas",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1083",
+    "companyName": "Morgan Stanley",
+    "roleTitle": "Full Stack Developer",
+    "jobLink": "https://www.google.com/search?q=Morgan%20Stanley%20Full%20Stack%20Developer%20careers%20india",
+    "category": "Software Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "React, Node.js, Next.js, Tailwind CSS",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1084",
+    "companyName": "Morgan Stanley",
+    "roleTitle": "Data Scientist",
+    "jobLink": "https://www.google.com/search?q=Morgan%20Stanley%20Data%20Scientist%20careers%20india",
+    "category": "Data Scientist",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "Python, TensorFlow, PyTorch, SQL, Pandas",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1085",
+    "companyName": "Texas instruments",
+    "roleTitle": "Data Engineer",
+    "jobLink": "https://www.google.com/search?q=Texas%20instruments%20Data%20Engineer%20careers%20india",
+    "category": "Data Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "Python, SQL, AWS, Apache Spark, Airflow",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1086",
+    "companyName": "Texas instruments",
+    "roleTitle": "Machine Learning Engineer",
+    "jobLink": "https://www.google.com/search?q=Texas%20instruments%20Machine%20Learning%20Engineer%20careers%20india",
+    "category": "Data Scientist",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "Python, AWS SageMaker, MLflow, Scikit-learn",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1087",
+    "companyName": "Google",
+    "roleTitle": "Data Scientist",
+    "jobLink": "https://www.google.com/search?q=Google%20Data%20Scientist%20careers%20india",
+    "category": "Data Scientist",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "Python, TensorFlow, PyTorch, SQL, Pandas",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1088",
+    "companyName": "Google",
+    "roleTitle": "Data Engineer",
+    "jobLink": "https://www.google.com/search?q=Google%20Data%20Engineer%20careers%20india",
+    "category": "Data Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "Python, SQL, AWS, Apache Spark, Airflow",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1089",
+    "companyName": "Goeasy",
+    "roleTitle": "Data Scientist",
+    "jobLink": "https://www.google.com/search?q=Goeasy%20Data%20Scientist%20careers%20india",
+    "category": "Data Scientist",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "Python, TensorFlow, PyTorch, SQL, Pandas",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1090",
+    "companyName": "Goeasy",
+    "roleTitle": "Machine Learning Engineer",
+    "jobLink": "https://www.google.com/search?q=Goeasy%20Machine%20Learning%20Engineer%20careers%20india",
+    "category": "Data Scientist",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "Python, AWS SageMaker, MLflow, Scikit-learn",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1091",
+    "companyName": "Zscaler",
+    "roleTitle": "Machine Learning Engineer",
+    "jobLink": "https://www.google.com/search?q=Zscaler%20Machine%20Learning%20Engineer%20careers%20india",
+    "category": "Data Scientist",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "Python, AWS SageMaker, MLflow, Scikit-learn",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1092",
+    "companyName": "Zscaler",
+    "roleTitle": "Full Stack Developer",
+    "jobLink": "https://www.google.com/search?q=Zscaler%20Full%20Stack%20Developer%20careers%20india",
+    "category": "Software Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "React, Node.js, Next.js, Tailwind CSS",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1093",
+    "companyName": "Zscaler",
+    "roleTitle": "Data Scientist",
+    "jobLink": "https://www.google.com/search?q=Zscaler%20Data%20Scientist%20careers%20india",
+    "category": "Data Scientist",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "Python, TensorFlow, PyTorch, SQL, Pandas",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1094",
+    "companyName": "Visa",
+    "roleTitle": "Data Engineer",
+    "jobLink": "https://www.google.com/search?q=Visa%20Data%20Engineer%20careers%20india",
+    "category": "Data Engineer",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "Python, SQL, AWS, Apache Spark, Airflow",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  },
+  {
+    "id": "ag_agent_1781549544959_1095",
+    "companyName": "Adidas",
+    "roleTitle": "Machine Learning Engineer",
+    "jobLink": "https://www.google.com/search?q=Adidas%20Machine%20Learning%20Engineer%20careers%20india",
+    "category": "Data Scientist",
+    "experienceRange": "3-8 years",
+    "requiredSkills": "Python, AWS SageMaker, MLflow, Scikit-learn",
+    "postedAt": "2026-06-15T18:52:24.959Z"
+  }
+]
