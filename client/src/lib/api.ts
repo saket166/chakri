@@ -98,7 +98,6 @@ export const api = {
   },
   jobs: {
     list: () => get<any[]>("/jobs"),
-    runAgent: () => post<any>("/jobs/agent/run"),
   },
 };
 

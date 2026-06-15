@@ -27,7 +27,6 @@ import ResetPassword from "@/pages/reset-password";
 import NotFound from "@/pages/not-found";
 import NotificationsPage from "@/pages/notifications";
 import Onboarding from "@/pages/onboarding";
-import TriggerNewsletter from "@/pages/trigger-newsletter";
 import JobsPage from "@/pages/jobs";
 import { useState, useEffect } from "react";
 import { isLoggedIn, getCachedUser } from "@/lib/api";
@@ -102,7 +101,6 @@ function AppLayout() {
               <Route path="/terms"          component={Terms} />
               <Route path="/privacy"        component={Privacy} />
               <Route path="/contact"        component={Contact} />
-              <Route path="/admin/trigger-newsletter" component={TriggerNewsletter} />
               <Route path="/jobs"           component={JobsPage} />
               <Route component={NotFound} />
             </Switch>

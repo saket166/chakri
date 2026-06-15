@@ -7,3 +7,4 @@ vite.config.ts.*
 .env
 server/newsletter_queue.json
 server/jobs_db.json
+scratch/

@@ -61,11 +61,13 @@ export async function runJobScraperAgent() {
       skills = "React, Node.js, Next.js, Tailwind CSS";
     }
 
+    const searchQuery = encodeURIComponent(`${company} ${roleTitle} careers india`);
+
     return {
       id: `job_mock_${Date.now()}_${index}`,
       companyName: company,
       roleTitle: roleTitle,
-      jobLink: `https://www.${company.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()}.com/careers/jobs/${index + 1000}`,
+      jobLink: `https://www.google.com/search?q=${searchQuery}`,
       category: category,
       experienceRange: "3-8 years",
       requiredSkills: skills,

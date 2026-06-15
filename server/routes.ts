@@ -8,7 +8,7 @@ import { sendReferralRequestEmail, sendReferralConfirmedEmail, sendConnectionReq
 import jwt from "jsonwebtoken";
 import fs from "fs/promises";
 import path from "path";
-import { getJobsDb, runJobScraperAgent } from "./jobs-agent";
+
 
 const ADMIN_EMAIL = "saketengland@gmail.com";
 
@@ -850,26 +850,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!userId) return res.status(401).json({ error: "Unauthorized" });
     
     try {
-      const jobs = await getJobsDb();
-      return res.json(jobs);
+      const data = await fs.readFile(path.join(process.cwd(), "server", "jobs_db.json"), "utf-8");
+      return res.json(JSON.parse(data));
     } catch (e: any) {
+      if (e.code === "ENOENT") return res.json([]);
       return res.status(500).json({ error: "Failed to load jobs" });
-    }
-  });
-
-  app.post("/api/jobs/agent/run", async (req: Request, res: Response) => {
-    // ONLY Saket can run the agent
-    const userId = getUser(req);
-    if (!userId) return res.status(401).json({ error: "Unauthorized" });
-    const [me] = await db.select({ email: users.email }).from(users).where(eq(users.id, userId)).limit(1);
-    if (!me || me.email !== ADMIN_EMAIL) return res.status(403).json({ error: "Forbidden" });
-
-    try {
-      const result = await runJobScraperAgent();
-      return res.json(result);
-    } catch (e: any) {
-      console.error("[Jobs] Agent Error:", e);
-      return res.status(500).json({ error: e.message });
     }
   });
 
