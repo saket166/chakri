@@ -85,7 +85,7 @@ export async function runJobScraperAgent() {
     try {
       console.log(`[JobAgent] Asking Gemini to search for batch: ${companyBatch.join(", ")}`);
       
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`, {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -119,7 +119,7 @@ export async function runJobScraperAgent() {
     }
     
     // Wait slightly to respect rate limits
-    await new Promise(res => setTimeout(res, 2000));
+    await new Promise(res => setTimeout(res, 5000));
   }
 
   // Save the successfully scraped jobs to our JSON db

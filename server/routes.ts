@@ -4,32 +4,14 @@ import { db } from "./db";
 import { users, referralRequests, feedItems, recommendations, directMessages, chatMessages, notifications, connectionRequests } from "@shared/schema";
 import { eq, and, or, ilike, desc, sql, inArray, ne } from "drizzle-orm";
 import { registerAuthRoutes } from "./auth";
-import { sendReferralRequestEmail, sendReferralConfirmedEmail, sendConnectionRequestEmail, sendWeeklySummaryEmail, sendPendingRequestNudgeEmail, sendNewsletterBlast } from "./email";
+import { sendReferralRequestEmail, sendReferralConfirmedEmail, sendConnectionRequestEmail, sendWeeklySummaryEmail, sendPendingRequestNudgeEmail } from "./email";
 import jwt from "jsonwebtoken";
 import fs from "fs/promises";
 import path from "path";
 import { getJobsDb, runJobScraperAgent } from "./jobs-agent";
 
 const ADMIN_EMAIL = "saketengland@gmail.com";
-const NEWSLETTER_QUEUE_FILE = path.join(process.cwd(), "server", "newsletter_queue.json");
 
-// Ensure queue file exists
-async function getNewsletterQueue() {
-  try {
-    const data = await fs.readFile(NEWSLETTER_QUEUE_FILE, "utf-8");
-    return JSON.parse(data);
-  } catch (e: any) {
-    if (e.code === "ENOENT") {
-      await fs.writeFile(NEWSLETTER_QUEUE_FILE, JSON.stringify([]));
-      return [];
-    }
-    throw e;
-  }
-}
-
-async function saveNewsletterQueue(queue: any[]) {
-  await fs.writeFile(NEWSLETTER_QUEUE_FILE, JSON.stringify(queue, null, 2));
-}
 
 const JWT_SECRET = process.env.JWT_SECRET || "chakri-dev-secret-change-in-prod";
 
@@ -891,68 +873,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // ── Newsletter System (Hardcoded Auth) ──────────────────────────────────
-  app.get("/api/newsletter/queue", async (req: Request, res: Response) => {
-    const userId = getUser(req);
-    if (!userId) return res.status(401).json({ error: "Unauthorized" });
-    const [me] = await db.select({ email: users.email }).from(users).where(eq(users.id, userId)).limit(1);
-    if (!me || me.email !== ADMIN_EMAIL) return res.status(403).json({ error: "Forbidden" });
 
-    const queue = await getNewsletterQueue();
-    return res.json(queue);
-  });
-
-  app.post("/api/newsletter/queue", async (req: Request, res: Response) => {
-    const userId = getUser(req);
-    if (!userId) return res.status(401).json({ error: "Unauthorized" });
-    const [me] = await db.select({ email: users.email }).from(users).where(eq(users.id, userId)).limit(1);
-    if (!me || me.email !== ADMIN_EMAIL) return res.status(403).json({ error: "Forbidden" });
-
-    const job = {
-      id: Date.now().toString(),
-      companyName: req.body.companyName || "",
-      roleTitle: req.body.roleTitle || "",
-      jobLink: req.body.jobLink || "",
-      referrerName: req.body.referrerName || "",
-      requiredSkills: req.body.requiredSkills || "",
-      createdAt: new Date().toISOString()
-    };
-
-    const queue = await getNewsletterQueue();
-    queue.push(job);
-    await saveNewsletterQueue(queue);
-
-    return res.json(job);
-  });
-
-  app.post("/api/newsletter/trigger", async (req: Request, res: Response) => {
-    const userId = getUser(req);
-    if (!userId) return res.status(401).json({ error: "Unauthorized" });
-    const [me] = await db.select({ email: users.email }).from(users).where(eq(users.id, userId)).limit(1);
-    if (!me || me.email !== ADMIN_EMAIL) return res.status(403).json({ error: "Forbidden" });
-
-    try {
-      const queue = await getNewsletterQueue();
-      if (queue.length === 0) return res.status(400).json({ error: "Queue is empty. Add jobs first." });
-
-      const verifiedUsers = await db.select({ email: users.email, name: users.name }).from(users).where(eq(users.emailVerified, true));
-      if (verifiedUsers.length === 0) return res.status(400).json({ error: "No verified users found." });
-
-      let sent = 0;
-      for (const u of verifiedUsers) {
-        await sendNewsletterBlast(u.email, u.name, queue).catch(console.error);
-        sent++;
-      }
-
-      // Flush queue
-      await saveNewsletterQueue([]);
-
-      return res.json({ ok: true, sent, jobsIncluded: queue.length });
-    } catch (e: any) {
-      console.error("[Newsletter] Error:", e);
-      return res.status(500).json({ error: e.message });
-    }
-  });
 
   const httpServer = createServer(app);
   return httpServer;
