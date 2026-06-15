@@ -101,6 +101,10 @@ export const api = {
     addJob: (data: any) => post<any>("/newsletter/queue", data),
     trigger: () => post<any>("/newsletter/trigger"),
   },
+  jobs: {
+    list: () => get<any[]>("/jobs"),
+    runAgent: () => post<any>("/jobs/agent/run"),
+  },
 };
 
 // ── Session helpers ─────────────────────────────────────────────────────────

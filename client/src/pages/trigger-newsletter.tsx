@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { api, getCachedUser } from "@/lib/api";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
-import { Rocket, ShieldAlert, Loader2, Users, Send } from "lucide-react";
+import { Rocket, ShieldAlert, Loader2, Users, Send, Bot } from "lucide-react";
 
 const ADMIN_EMAIL = "saketengland@gmail.com";
 
@@ -13,6 +13,7 @@ export default function TriggerNewsletter() {
   const { toast } = useToast();
   const user = getCachedUser();
   const [loading, setLoading] = useState(false);
+  const [agentLoading, setAgentLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [queue, setQueue] = useState<any[]>([]);
 
@@ -51,6 +52,20 @@ export default function TriggerNewsletter() {
     }
   };
 
+  const handleRunAgent = async () => {
+    if (!confirm("Run the AI Job Scraper? This uses Gemini API to search and scrape jobs for all companies. It might take a minute.")) return;
+    
+    setAgentLoading(true);
+    try {
+      const res = await api.jobs.runAgent();
+      toast({ title: "Agent Run Complete! 🤖", description: `Successfully scraped and added ${res.addedCount} new jobs to the Job Board.` });
+    } catch (e: any) {
+      toast({ title: "Agent failed", description: e.message, variant: "destructive" });
+    } finally {
+      setAgentLoading(false);
+    }
+  };
+
   if (fetching) return <div className="p-8 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" /></div>;
 
   return (
@@ -85,6 +100,29 @@ export default function TriggerNewsletter() {
           {queue.length === 0 && (
             <p className="text-xs text-red-500 font-medium mt-3">Cannot fire empty queue. Ask Saket to curate jobs first.</p>
           )}
+        </CardContent>
+      </Card>
+
+      <Card className="border-indigo-200 shadow-md mb-6 bg-indigo-50/50 dark:bg-indigo-950/10">
+        <CardContent className="p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 bg-indigo-100 rounded-full flex items-center justify-center shrink-0">
+              <Bot className="h-6 w-6 text-indigo-600" />
+            </div>
+            <div>
+              <h3 className="font-bold text-lg">AI Job Scraper Agent</h3>
+              <p className="text-sm text-muted-foreground">Fetch new 3-10 YOE Data & SWE jobs from the web for all Chakri companies.</p>
+            </div>
+          </div>
+          <Button 
+            onClick={handleRunAgent} 
+            disabled={agentLoading}
+            variant="outline"
+            className="w-full sm:w-auto border-indigo-200 hover:bg-indigo-100 hover:text-indigo-700 text-indigo-600"
+          >
+            {agentLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Bot className="h-4 w-4 mr-2" />}
+            {agentLoading ? "Scraping Jobs..." : "Run AI Agent"}
+          </Button>
         </CardContent>
       </Card>
 

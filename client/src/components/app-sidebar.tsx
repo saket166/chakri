@@ -14,6 +14,7 @@ const menuItems = [
   { title: "Connections",     url: "/connections",  icon: Users, connReq: true },
   { title: "Messages",        url: "/messages",     icon: MessageCircle },
   { title: "Marketplace",     url: "/marketplace",  icon: ShoppingBag },
+  { title: "Job Board",       url: "/jobs",         icon: Briefcase },
   { title: "Profile",         url: "/profile",      icon: User },
 ];
 

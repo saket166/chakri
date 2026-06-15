@@ -4,3 +4,6 @@ dist
 server/public
 vite.config.ts.*
 *.tar.gz
+.env
+server/newsletter_queue.json
+server/jobs_db.json
